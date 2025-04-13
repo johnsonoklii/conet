@@ -2,26 +2,38 @@ cmake_minimum_required(VERSION 3.0)
 
 project(conet)
 
+# 默认编译Release版本
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
+    message(STATUS "No build type selected, default to Release")
+endif()
+
 option(CONET_BUILD_EXAMPLE "Build conet example" OFF)
-option(CONET_BUILD_TEST "Build conet test" ON)
+option(CONET_BUILD_TEST "Build conet test" OFF)
 option(ENABLE_CONET_DEBUG "Enable CONET_DEBUG macro" OFF)
 
-set(CXX_FLAGS
- -O2
- -g
- -Wall
- -Wextra
- -Werror
- -std=c++11
- -pthread
-)
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "Debug build detected, enabling debug options")
+    set(CONET_BUILD_EXAMPLE ON CACHE BOOL "Force ON for Debug build" FORCE)
+    set(CONET_BUILD_TEST ON CACHE BOOL "Force ON for Debug build" FORCE)
+    set(ENABLE_CONET_DEBUG ON CACHE BOOL "Force ON for Debug build" FORCE)
+endif()
 
 if(ENABLE_CONET_DEBUG)
   add_definitions(-DCONET_DEBUG)
 endif()
 
-# FLAGS
-string(REPLACE ";" " " CMAKE_CXX_FLAGS "${CXX_FLAGS}")
+set(CMAKE_CXX_STANDARD 11)
+
+set(CMAKE_CXX_FLAGS_DEBUG 
+    "-O0 -g3 -Wall -Wextra -Werror -pthread"
+    CACHE STRING "Debug compiler flags" FORCE
+)
+
+set(CMAKE_CXX_FLAGS_RELEASE
+    "-O2 -g -Wall -Wextra -Werror -pthread"
+    CACHE STRING "Release compiler flags" FORCE
+)
 
 # OUTPUT
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)

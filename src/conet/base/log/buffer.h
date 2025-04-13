@@ -16,8 +16,8 @@ struct inner_message {
     LogContext ctx;
 
     inner_message() {}
-    inner_message(const LogContext& msg) : ctx(msg) { }
-    inner_message(LogContext&& msg) : ctx(std::move(msg)) { }
+    inner_message(const LogContext& c) : ctx(c) { }
+    inner_message(LogContext&& c) : ctx(std::move(c)) { }
     inner_message(const inner_message& other) : ctx(other.ctx) { }
     inner_message(inner_message&& other): ctx(std::move(other.ctx)){ }
     inner_message& operator=(inner_message&& other) {

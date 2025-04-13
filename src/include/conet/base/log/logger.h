@@ -75,7 +75,8 @@ LogOption& GLOBAL_OPTION();
 */
 class Logger {
 public:
-    Logger(LogOption& option);
+    Logger();
+    Logger(const LogOption& option);
     ~Logger();
 
     static Logger& getInstance();
@@ -84,11 +85,12 @@ public:
     LogOption getOption() const { return m_option; }
 
     void addAppender(const std::string& name, LogAppenderPtr appender);
+
+    void log(LogLevel level, const char* file_name, int line, const char* fmt, ...);
     
-    void log(LogLevel level, const char* file_name, int line, const char* msg, size_t len);
 private:
-    Logger();
     void init();
+    
 
 private:
     LogOption m_option;  
@@ -102,47 +104,37 @@ private:
 namespace conet {
 
 #ifdef CONET_DEBUG
-#define LOG_DEBUG(fmt, ...) \
-    do { \
-        GLOB_LOG_OPTION.setLevel(LogLevel::DEBUG); \
-        char bufxxx159[1024]; \
-        snprintf(bufxxx159, sizeof(bufxxx159), fmt, ##__VA_ARGS__); \
-        Logger::getInstance().log(LogLevel::DEBUG, __FILE__, __LINE__, bufxxx159, strlen(bufxxx159)); \
-    } while (0)
+#define LOG_DEBUG(fmt, ...) Logger::getInstance().log(LogLevel::DEBUG, __FILE__, __LINE__, fmt, ##__VA_ARGS__);
 #else
 #define LOG_DEBUG(fmt, ...)
 #endif
     
-#define LOG_INFO(fmt, ...) \
-    do { \
-        char bufxxx159[1024]; \
-        snprintf(bufxxx159, sizeof(bufxxx159), fmt, ##__VA_ARGS__); \
-        Logger::getInstance().log(LogLevel::INFO, __FILE__, __LINE__, bufxxx159, strlen(bufxxx159)); \
-    } while (0)
-
-#define LOG_WARN(fmt, ...) \
-    do { \
-        char bufxxx159[1024]; \
-        snprintf(bufxxx159, sizeof(bufxxx159), fmt, ##__VA_ARGS__); \
-        Logger::getInstance().log(LogLevel::WARN, __FILE__, __LINE__, bufxxx159, strlen(bufxxx159)); \
-    } while (0)
-
-#define LOG_ERROR(fmt, ...) \
-    do { \
-        char bufxxx159[1024]; \
-        snprintf(bufxxx159, sizeof(bufxxx159), fmt, ##__VA_ARGS__); \
-        Logger::getInstance().log(LogLevel::ERROR, __FILE__, __LINE__, bufxxx159, strlen(bufxxx159)); \
-    } while (0)
-
+#define LOG_INFO(fmt, ...) Logger::getInstance().log(LogLevel::INFO, __FILE__, __LINE__, fmt, ##__VA_ARGS__);
+#define LOG_WARN(fmt, ...) Logger::getInstance().log(LogLevel::WARN,__FILE__, __LINE__, fmt, ##__VA_ARGS__);
+#define LOG_ERROR(fmt, ...) Logger::getInstance().log(LogLevel::ERROR,__FILE__, __LINE__, fmt, ##__VA_ARGS__);
 #define LOG_FATAL(fmt, ...) \
     do { \
-        char bufxxx159[1024]; \
-        snprintf(bufxxx159, sizeof(bufxxx159), fmt, ##__VA_ARGS__); \
-        Logger::getInstance().log(LogLevel::ERROR, __FILE__, __LINE__, bufxxx159, strlen(bufxxx159)); \
+        Logger::getInstance().log(LogLevel::FATAL,__FILE__, __LINE__, fmt, ##__VA_ARGS__); \
         exit(1); \
     } while (0)
 
+#ifdef CONET_DEBUG
+#define log_debug(logger, fmt, ...) logger.log(LogLevel::DEBUG, __FILE__, __LINE__, fmt, ##__VA_ARGS__);
+#else
+#define log_debug(logger, fmt, ...)
+#endif
 
-}
+#define log_info(logger, fmt, ...) logger.log(LogLevel::INFO, __FILE__, __LINE__, fmt, ##__VA_ARGS__);
+#define log_warn(logger, fmt, ...) logger.log(LogLevel::WARN, __FILE__, __LINE__, fmt, ##__VA_ARGS__);
+#define log_error(logger, fmt, ...) logger.log(LogLevel::ERROR, __FILE__, __LINE__, fmt, ##__VA_ARGS__);
+#define log_fatal(logger, fmt, ...) \
+    do { \
+        logger.log(LogLevel::FATAL, __FILE__, __LINE__, fmt, ##__VA_ARGS__); \
+        exit(1); \
+    } while(0)
+    
+} // namespace conet
+
+
 
 #endif

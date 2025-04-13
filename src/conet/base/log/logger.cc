@@ -8,7 +8,7 @@
 #include "conet/base/util/process.h"
 
 #include <cstring>
-#include <string_view>
+#include <cstdarg>
 
 namespace conet {
 namespace log {
@@ -39,11 +39,10 @@ Logger::Logger(): m_option(GLOB_LOG_OPTION) {
     init();
 }
 
-Logger::Logger(LogOption& option): m_option(option) {
+Logger::Logger(const LogOption& option): m_option(option) {
     init();
 }
 
-// FIXME: 内存泄漏，FileAppender析构函数没有被调用
 Logger::~Logger() {
 }
 
@@ -72,8 +71,17 @@ Logger& Logger::getInstance() {
     return logger;
 }
 
-void Logger::log(LogLevel level, const char* file_name, int line, const char* msg, size_t len) {
+void Logger::addAppender(const std::string& name, LogAppenderPtr appender) {
+    m_appenders.emplace(name, appender);
+}
+void Logger::log(LogLevel level, const char* file_name, int line, const char* fmt, ...) {
     if (level < m_option.getLevel()) return;
+
+    char msg[1024]; 
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(msg, sizeof(msg), fmt, args);
+    va_end(args);
 
     LogContext ctx {
         m_option.getName().c_str(),
@@ -81,7 +89,7 @@ void Logger::log(LogLevel level, const char* file_name, int line, const char* ms
         file_name,
         line,
         ProcessInfo::tid(),
-        std::string(msg, len),
+        std::string(msg, strlen(msg)),
         m_formatter
     };
 
@@ -90,9 +98,7 @@ void Logger::log(LogLevel level, const char* file_name, int line, const char* ms
     }
 }
 
-void Logger::addAppender(const std::string& name, LogAppenderPtr appender) {
-    m_appenders.emplace(name, appender);
-}
+
 
 } // namesapce log
 } // namesapce conet
