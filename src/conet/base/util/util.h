@@ -16,8 +16,7 @@ namespace conet {
 struct Util {
 
     static const char* getErrInfo(int error_code);
-    static const char* getCurDateTime(bool isTime, time_t* now = nullptr);
-
+    
     static void mkDir(const std::string& dir);
     static std::string getShortFileName(std::string&& file_name);
 };

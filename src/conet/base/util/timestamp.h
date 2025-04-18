@@ -17,9 +17,9 @@ public:
     Timestamp();
     Timestamp(int64_t microseconds);
     static Timestamp now();
-    static Timestamp addTimeSecond(Timestamp timestamp, double microseconds);
-    static Timestamp addTimeMilliSecond(Timestamp timestamp, double microseconds);
-    static Timestamp addTimeMicroSecond(Timestamp timestamp, double microseconds);
+    static Timestamp addTimeSecond(const Timestamp& timestamp, double microseconds);
+    static Timestamp addTimeMilliSecond(const Timestamp& timestamp, double microseconds);
+    static Timestamp addTimeMicroSecond(const Timestamp& timestamp, double microseconds);
     static Timestamp invalid();
 
     std::string toString() const;
@@ -34,11 +34,11 @@ public:
     }
 
     bool operator==(const Timestamp& rhs) const {
-        return m_systemTimePoint == rhs.m_systemTimePoint 
-            || microSecondsSinceEpoch() == rhs.microSecondsSinceEpoch()
-            || milliSecondsSinceEpoch() == rhs.milliSecondsSinceEpoch()
-            || secondsSinceEpoch() == rhs.secondsSinceEpoch();
+        return m_systemTimePoint == rhs.m_systemTimePoint;
     }
+
+    // util
+    static const char* getCurDateTime(bool isTime, time_t* now = nullptr);
 
 private:
     Timestamp(const std::chrono::system_clock::time_point& timePoint);
