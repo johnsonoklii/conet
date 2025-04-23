@@ -1,0 +1,29 @@
+#ifndef CONET_EPOLLER_H
+#define CONET_EPOLLER_H
+
+#include "conet/net/Poller.h"
+
+#include <vector>
+#include <sys/epoll.h>
+
+namespace conet {
+namespace net {
+
+class Epoller : public Poller {
+public:
+    Epoller();
+    virtual ~Epoller();
+
+    virtual void poll(int timeoutMs, ChannelList* activeChannels);
+    void updateChannel(Channel* channel);
+
+    bool valid() const { return m_efd > 0; }
+private:
+    int m_efd{-1};
+    std::vector<struct epoll_event> m_events;
+};
+
+} // namespace net
+} // namespace conet
+
+#endif
