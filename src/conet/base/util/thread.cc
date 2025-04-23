@@ -35,10 +35,10 @@ void Thread::join() {
 }
 
 void Thread::setDefaultName() {
-    int num = m_numCreated.fetch_add(1);
     if (m_name.empty()) {
+        int num = m_numCreated.fetch_add(1);
         char buf[32];
-        snprintf(buf, sizeof buf, "Thread-%d", num);
+        snprintf(buf, sizeof(buf), "Thread-%d", num);
         m_name = buf;
     }
 }

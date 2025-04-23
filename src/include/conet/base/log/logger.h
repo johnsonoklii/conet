@@ -21,7 +21,7 @@ enum LogLevel {
 };
 
 struct LogOption {
-    LogLevel m_level{INFO};
+    LogLevel m_level{DEBUG};
     std::string m_name{"conet"};   
     bool m_is_console{true};
 
@@ -102,6 +102,7 @@ private:
 } // namesapce conet
 
 namespace conet {
+namespace log {
 
 #ifdef CONET_DEBUG
 #define LOG_DEBUG(fmt, ...) Logger::getInstance().log(LogLevel::DEBUG, __FILE__, __LINE__, fmt, ##__VA_ARGS__);
@@ -132,7 +133,8 @@ namespace conet {
         logger.log(LogLevel::FATAL, __FILE__, __LINE__, fmt, ##__VA_ARGS__); \
         exit(1); \
     } while(0)
-    
+
+} // namespace log
 } // namespace conet
 
 
