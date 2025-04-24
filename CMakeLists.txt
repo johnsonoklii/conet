@@ -8,6 +8,8 @@ if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "No build type selected, default to Release")
 endif()
 
+enable_language(ASM)
+
 option(CONET_BUILD_EXAMPLE "Build conet example" OFF)
 option(CONET_BUILD_TEST "Build conet test" OFF)
 option(ENABLE_CONET_DEBUG "Enable CONET_DEBUG macro" OFF)
