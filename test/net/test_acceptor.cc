@@ -8,5 +8,7 @@ int main() {
     conet::net::Acceptor acceptor(&loop, addr);
     acceptor.listen();
 
+    loop.loop();
+
     getchar();
 }

@@ -48,7 +48,7 @@ void Socket::listen() {
 }
 
 int Socket::accept() {
-    int connfd = ::accept(m_fd, nullptr, nullptr);
+    int connfd = ::accept4(m_fd, nullptr, nullptr, SOCK_NONBLOCK | SOCK_CLOEXEC);
     if (connfd == -1) {
         LOG_FATAL("Socket::accept fatal: %s.", strerror(errno));
         return -1;

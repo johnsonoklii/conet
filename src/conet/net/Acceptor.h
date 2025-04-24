@@ -15,13 +15,16 @@ public:
     Acceptor(EventLoop* loop, const InetAddress& listenAddr);
 
     void listen();
-    void accept();
+    int accept();
+
+    void stop() { m_listening = false; }
 
 private:
     EventLoop* m_loop;
     InetAddress m_listenAddr;
     Socket m_acceptSocket;
     Channel m_acceptChannel;
+    bool m_listening;
 };
 
 } // namespace net
