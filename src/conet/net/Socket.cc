@@ -1,8 +1,11 @@
 #include "conet/net/Socket.h"
 #include "conet/base/log/logger.h"
+#include "conet/base/coroutine/hook.h"
 
 #include <sys/socket.h>
 #include <unistd.h>
+#include <netinet/tcp.h>
+#include <fcntl.h>
 
 using namespace conet::log;
 
@@ -17,9 +20,10 @@ Socket::~Socket() {
     close();
 }
 
-Socket Socket::createSocket() {
-    int fd = ::socket(AF_INET, SOCK_STREAM, 0);
+Socket Socket::createNonBlockSocket() {
+    int fd = ::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, IPPROTO_TCP);
     Socket sock(fd);
+    sock.setNonBlocking();
     return sock;
 }
 
@@ -47,14 +51,15 @@ void Socket::listen() {
     }
 }
 
-int Socket::accept() {
-    int connfd = ::accept4(m_fd, nullptr, nullptr, SOCK_NONBLOCK | SOCK_CLOEXEC);
-    if (connfd == -1) {
-        LOG_FATAL("Socket::accept fatal: %s.", strerror(errno));
-        return -1;
+int Socket::accept(InetAddress* peer_addr) {
+    sockaddr_in cli_addr;
+    memset(&cli_addr, 0, sizeof(cli_addr));
+    socklen_t len = sizeof(cli_addr);
+    int ret = accept_hook(m_fd, (sockaddr*)&cli_addr, &len);
+    if (ret > 0) {
+        peer_addr->setSockAddr(cli_addr);
     }
-
-    return connfd;
+    return ret;
 }
 
 void Socket::close() {
@@ -64,25 +69,42 @@ void Socket::close() {
     }
 }
 
-// TODO
-void Socket::setNoDelay() {
-
+void Socket::setNoDelay(bool on) {
+    int optval = on ? 1 : 0;
+    if(::setsockopt(m_fd, IPPROTO_TCP, TCP_NODELAY,
+                    &optval, static_cast<socklen_t>(sizeof(optval))) == -1) {
+        LOG_FATAL("Socket::setNoDelay(): %s.", strerror(errno));
+    }
 }
 
-void Socket::setReuseAddr() {
-
+void Socket::setReuseAddr(bool on) {
+    int optval = on ? 1 : 0;
+    if(::setsockopt(m_fd, SOL_SOCKET, SO_REUSEADDR,
+                    &optval, static_cast<socklen_t>(sizeof(optval))) == -1) {
+        LOG_FATAL("Socket::setReuseAddr(): %s.", strerror(errno));
+    }
 }
 
-void Socket::setReusePort() {
-
+void Socket::setReusePort(bool on) {
+    int optval = on ? 1 : 0;
+    if(::setsockopt(m_fd, SOL_SOCKET, SO_REUSEPORT,
+                    &optval, static_cast<socklen_t>(sizeof(optval))) == -1) {
+        LOG_FATAL("Socket::setReusePort(): %s.", strerror(errno));
+    }
 }
 
-void Socket::setKeepAlive() {
-
+void Socket::setKeepAlive(bool on) {
+    int optval = on ? 1 : 0;
+    if(::setsockopt(m_fd, SOL_SOCKET, SO_KEEPALIVE,
+                    &optval, static_cast<socklen_t>(sizeof(optval))) == -1) {
+        LOG_FATAL("Socket::setKeepAlive(): %s.", strerror(errno));
+    }
 }
 
 void Socket::setNonBlocking() {
-
+    if (::fcntl(m_fd, F_SETFL, O_NONBLOCK) == -1) {
+        LOG_FATAL("Socket::setNonBlocking(): %s.", strerror(errno));
+    }
 }
 
 } // namespace net

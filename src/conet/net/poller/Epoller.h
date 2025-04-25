@@ -14,10 +14,14 @@ public:
     Epoller();
     virtual ~Epoller();
 
-    virtual void poll(int timeoutMs, ChannelList* activeChannels);
+    virtual void poll(int timeout_ms, ChannelList* active_channels);
     void updateChannel(Channel* channel);
 
     bool valid() const { return m_efd > 0; }
+
+private:
+    void update(int operation, Channel* channel);
+
 private:
     int m_efd{-1};
     std::vector<struct epoll_event> m_events;

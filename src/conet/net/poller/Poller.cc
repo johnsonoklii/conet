@@ -3,7 +3,7 @@
 
 namespace conet {
 namespace net {
-static Poller* createPoller() {
+Poller* Poller::createPoller() {
     return new Epoller();
 }
 

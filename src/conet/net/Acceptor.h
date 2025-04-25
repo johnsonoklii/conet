@@ -12,19 +12,17 @@ class InetAddress;
 
 class Acceptor {
 public:
-    Acceptor(EventLoop* loop, const InetAddress& listenAddr);
+    using uptr = std::unique_ptr<Acceptor>;
+    Acceptor(const InetAddress& listen_addr);
 
-    void listen();
-    int accept();
-
-    void stop() { m_listening = false; }
+    int accept(InetAddress* peer_addr);
+    InetAddress getListenAddr() const { return m_listen_addr; }
 
 private:
-    EventLoop* m_loop;
-    InetAddress m_listenAddr;
-    Socket m_acceptSocket;
-    Channel m_acceptChannel;
-    bool m_listening;
+    InetAddress m_listen_addr;
+    Socket m_accept_socket;
+    Channel m_accept_channel;
+    int m_idle_fd{-1};
 };
 
 } // namespace net

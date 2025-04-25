@@ -11,21 +11,21 @@ public:
     Socket(int fd);
     ~Socket();
 
-    static Socket createSocket();
+    static Socket createNonBlockSocket();
 
-    int getFd() const { return m_fd; }
+    int fd() const { return m_fd; }
     void setFd(int fd) { m_fd = fd; }
 
     void bind(const InetAddress& addr);
     void listen();
-    int accept();
+    int accept(InetAddress* peer_addr);
 
     void close();
 
-    void setNoDelay();
-    void setReuseAddr();
-    void setReusePort();
-    void setKeepAlive();
+    void setNoDelay(bool on);
+    void setReuseAddr(bool on);
+    void setReusePort(bool on);
+    void setKeepAlive(bool on);
     void setNonBlocking();
 
     bool valid() { return m_fd > 0; }

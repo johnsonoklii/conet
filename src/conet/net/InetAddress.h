@@ -8,17 +8,21 @@
 
 namespace conet {
 namespace net {
-    
+
+// TODO: 支持ipv6
 class InetAddress {
 public:
+    InetAddress() = default;
+    InetAddress(const sockaddr_in& addr);
     InetAddress(const std::string& ip, uint16_t port);
 
-    sockaddr* getSockAddr() const;
+    void setSockAddr(const sockaddr_in& addr) { m_addr = addr; };
+    sockaddr* getSockAddr() const { return (sockaddr*)&m_addr; }
     uint32_t getAddrLen() const { return m_addr_len; }
 
+    std::string toIpPort() const;
+
 private:
-    std::string m_ip;
-    uint16_t m_port{0};
     sockaddr_in m_addr;
     uint32_t m_addr_len{0};
 };

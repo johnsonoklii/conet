@@ -116,7 +116,7 @@ namespace log {
 #define LOG_FATAL(fmt, ...) \
     do { \
         Logger::getInstance().log(LogLevel::FATAL,__FILE__, __LINE__, fmt, ##__VA_ARGS__); \
-        exit(1); \
+        abort(); \
     } while (0)
 
 #ifdef CONET_DEBUG
@@ -131,7 +131,7 @@ namespace log {
 #define log_fatal(logger, fmt, ...) \
     do { \
         logger.log(LogLevel::FATAL, __FILE__, __LINE__, fmt, ##__VA_ARGS__); \
-        exit(1); \
+        abort(); \
     } while(0)
 
 } // namespace log

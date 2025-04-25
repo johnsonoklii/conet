@@ -10,8 +10,8 @@ using namespace conet::log;
 
 namespace conet {
 
-static thread_local Coroutine* t_main_coroutine = nullptr;
-static thread_local Coroutine* t_cur_coroutine = nullptr;
+static thread_local Coroutine::sptr t_main_coroutine = nullptr;
+static thread_local Coroutine::sptr t_cur_coroutine = nullptr;
 
 static std::atomic_int s_coroutine_count{0};
 static std::atomic_int s_cur_coroutine_id{0};
@@ -20,19 +20,29 @@ int getNextCoroutineId() {
     return ++s_cur_coroutine_id;
 }
 
-Coroutine* Coroutine::getCurrentCoroutine() {
+Coroutine::sptr Coroutine::getCurrentCoroutine() {
     if (!t_cur_coroutine) {
-        t_main_coroutine = new Coroutine();
+        t_main_coroutine = std::make_shared<Coroutine>();
         t_cur_coroutine = t_main_coroutine;
     }
     return t_cur_coroutine;
 }
 
-Coroutine* Coroutine::getMainCoroutine() {
+Coroutine::sptr Coroutine::getMainCoroutine() {
     if (!t_main_coroutine) {
-        t_main_coroutine = new Coroutine();
+        t_main_coroutine = std::make_shared<Coroutine>();
+        if (!t_cur_coroutine) {
+            t_cur_coroutine = t_main_coroutine;
+        }
     }
     return t_main_coroutine;
+}
+
+bool Coroutine::isMainCoroutine() {
+    if (!t_main_coroutine || t_cur_coroutine == t_main_coroutine) {
+        return true;
+    }
+    return false;
 }
 
 void coRun(Coroutine* co) {
@@ -45,7 +55,6 @@ Coroutine::Coroutine() {
     m_cor_id = 0;
     s_coroutine_count++;
     std::memset(&m_coctx, 0, sizeof(m_coctx));
-    t_cur_coroutine = this;
 }
 
 Coroutine::Coroutine(int stack_size): m_stack_size(stack_size) {
@@ -59,7 +68,7 @@ Coroutine::Coroutine(int stack_size): m_stack_size(stack_size) {
     s_coroutine_count++;
 }
 
-Coroutine::Coroutine(int stack_size, std::function<void()> cb)
+Coroutine::Coroutine(int stack_size, std::function<void()> cb) 
 : Coroutine(stack_size) {
     setCallback(cb);
 }
@@ -73,7 +82,7 @@ Coroutine::~Coroutine() {
 void Coroutine::setCallback(std::function<void()> cb) {
     assert(m_stack_sp);
 
-    if (this == t_main_coroutine) {
+    if (this == t_main_coroutine.get()) {
         LOG_ERROR("Coroutine::setCallback: can't set callback for main coroutine.")
     }
 
@@ -89,19 +98,19 @@ void Coroutine::setCallback(std::function<void()> cb) {
     m_coctx.regs[kRDI] = reinterpret_cast<char*>(this);
 }
 
-void Coroutine::resume(Coroutine* co) {
+void Coroutine::resume(Coroutine::sptr co) {
     if (!t_main_coroutine) {
-        LOG_ERROR("Coroutine::resume: main coroutine is nullptr.")
+        LOG_ERROR("Coroutine::resume(): main coroutine is nullptr.")
         return;
     }
 
     if (t_cur_coroutine != t_main_coroutine) {
-        LOG_ERROR("Coroutine::resume: current coroutine must be main coroutine.")
+        LOG_ERROR("Coroutine::resume(): current coroutine must be main coroutine.")
         return;
     }
 
     if (co == t_cur_coroutine) {
-        LOG_DEBUG("Coroutine::resume: current coroutine is pending cor, need't swap.")
+        LOG_DEBUG("Coroutine::resume(): current coroutine is pending cor, need't swap.")
         return;
     }
 
@@ -125,7 +134,7 @@ void Coroutine::yield() {
         return;
     }
 
-    Coroutine* co = t_cur_coroutine;
+    Coroutine::sptr co = t_cur_coroutine;
     t_cur_coroutine = t_main_coroutine;
     coctx_swap(&co->m_coctx, &t_main_coroutine->m_coctx);
 }

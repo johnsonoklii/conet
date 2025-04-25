@@ -11,13 +11,13 @@ void func1() {
 int main() {
     // 创建主协程
     conet::Coroutine::getMainCoroutine();
-    conet::Coroutine co(8192, func1); 
+    conet::Coroutine::sptr co = std::make_shared<conet::Coroutine>(8192, func1); 
 
     printf("main start...\n");
-    conet::Coroutine::resume(&co);
+    conet::Coroutine::resume(co);
 
     printf("main end...\n");
-    conet::Coroutine::resume(&co);
+    conet::Coroutine::resume(co);
 
     return 0;
 }

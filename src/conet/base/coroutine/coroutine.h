@@ -5,11 +5,17 @@
 #include "conet/base/util/nocopyable.h"
 
 #include <functional>
+#include <memory>   
 
 namespace conet {
 
+static constexpr int DEFAULT_STACK_SIZE = 1024 * 64;
+
 class Coroutine: public nocopyable {
 public:
+    using sptr = std::shared_ptr<Coroutine>;
+    // only for main coroutine
+    Coroutine();
     Coroutine(int stack_size);
     Coroutine(int stack_size, std::function<void()> cb);
     ~Coroutine();
@@ -17,19 +23,16 @@ public:
     void setCallback(std::function<void()> cb);
 
 public:
-    static Coroutine* getCurrentCoroutine();
-    static Coroutine* getMainCoroutine();
+    static Coroutine::sptr getCurrentCoroutine();
+    static Coroutine::sptr getMainCoroutine();
+    static bool isMainCoroutine();
 
-    static void resume(Coroutine* co);
+    static void resume(Coroutine::sptr co);
     static void yield();
-
-private:
-    // only for main coroutine
-    Coroutine();
-
+    
 private:
     int m_cor_id{0};
-    int m_stack_size{0};
+    int m_stack_size{DEFAULT_STACK_SIZE};
     char* m_stack_sp{nullptr};
     coctx m_coctx;
 
