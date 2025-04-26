@@ -15,15 +15,15 @@ namespace conet {
 namespace log { 
 
 enum LogLevel {
-    DEBUG,
-    INFO,
-    WARN,
-    ERROR,
-    FATAL,
+    kDEBUG,
+    kINFO,
+    kWARN,
+    kERROR,
+    kFATAL,
 };
 
 struct LogOption {
-    LogLevel m_level{DEBUG};
+    LogLevel m_level{kDEBUG};
     std::string m_name{"conet"};   
     bool m_is_console{true};
 
@@ -107,32 +107,32 @@ namespace conet {
 namespace log {
 
 #ifdef CONET_DEBUG
-#define LOG_DEBUG(fmt, ...) Logger::getInstance().log(LogLevel::DEBUG, __FILE__, __LINE__, fmt, ##__VA_ARGS__);
+#define LOG_DEBUG(fmt, ...) Logger::getInstance().log(LogLevel::kDEBUG, __FILE__, __LINE__, fmt, ##__VA_ARGS__);
 #else
 #define LOG_DEBUG(fmt, ...)
 #endif
     
-#define LOG_INFO(fmt, ...) Logger::getInstance().log(LogLevel::INFO, __FILE__, __LINE__, fmt, ##__VA_ARGS__);
-#define LOG_WARN(fmt, ...) Logger::getInstance().log(LogLevel::WARN,__FILE__, __LINE__, fmt, ##__VA_ARGS__);
-#define LOG_ERROR(fmt, ...) Logger::getInstance().log(LogLevel::ERROR,__FILE__, __LINE__, fmt, ##__VA_ARGS__);
+#define LOG_INFO(fmt, ...) Logger::getInstance().log(LogLevel::kINFO, __FILE__, __LINE__, fmt, ##__VA_ARGS__);
+#define LOG_WARN(fmt, ...) Logger::getInstance().log(LogLevel::kWARN,__FILE__, __LINE__, fmt, ##__VA_ARGS__);
+#define LOG_ERROR(fmt, ...) Logger::getInstance().log(LogLevel::kERROR,__FILE__, __LINE__, fmt, ##__VA_ARGS__);
 #define LOG_FATAL(fmt, ...) \
     do { \
-        Logger::getInstance().log(LogLevel::FATAL,__FILE__, __LINE__, fmt, ##__VA_ARGS__); \
+        Logger::getInstance().log(LogLevel::kFATAL,__FILE__, __LINE__, fmt, ##__VA_ARGS__); \
         abort(); \
     } while (0)
 
 #ifdef CONET_DEBUG
-#define log_debug(logger, fmt, ...) logger.log(LogLevel::DEBUG, __FILE__, __LINE__, fmt, ##__VA_ARGS__);
+#define log_debug(logger, fmt, ...) logger.log(LogLevel::kDEBUG, __FILE__, __LINE__, fmt, ##__VA_ARGS__);
 #else
 #define log_debug(logger, fmt, ...)
 #endif
 
-#define log_info(logger, fmt, ...) logger.log(LogLevel::INFO, __FILE__, __LINE__, fmt, ##__VA_ARGS__);
-#define log_warn(logger, fmt, ...) logger.log(LogLevel::WARN, __FILE__, __LINE__, fmt, ##__VA_ARGS__);
-#define log_error(logger, fmt, ...) logger.log(LogLevel::ERROR, __FILE__, __LINE__, fmt, ##__VA_ARGS__);
+#define log_info(logger, fmt, ...) logger.log(LogLevel::kINFO, __FILE__, __LINE__, fmt, ##__VA_ARGS__);
+#define log_warn(logger, fmt, ...) logger.log(LogLevel::kWARN, __FILE__, __LINE__, fmt, ##__VA_ARGS__);
+#define log_error(logger, fmt, ...) logger.log(LogLevel::kERROR, __FILE__, __LINE__, fmt, ##__VA_ARGS__);
 #define log_fatal(logger, fmt, ...) \
     do { \
-        logger.log(LogLevel::FATAL, __FILE__, __LINE__, fmt, ##__VA_ARGS__); \
+        logger.log(LogLevel::kFATAL, __FILE__, __LINE__, fmt, ##__VA_ARGS__); \
         abort(); \
     } while(0)
 

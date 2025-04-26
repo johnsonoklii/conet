@@ -26,7 +26,7 @@ void TcpServer::start() {
 
     auto co_cb = [this] { accept(); };
     // FIXME: 这里考虑使用协程池来统一管理协程的生命周期，目前会通过t_cur_coroutine和channel来维护其生命周期
-    Coroutine::sptr co = std::make_shared<Coroutine>(DEFAULT_STACK_SIZE, co_cb);
+    Coroutine::sptr co = std::make_shared<Coroutine>(kDefaultStackSize, co_cb);
     Coroutine::resume(co);
 
     m_main_loop->loop();

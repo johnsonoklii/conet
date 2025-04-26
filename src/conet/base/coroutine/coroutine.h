@@ -9,7 +9,7 @@
 
 namespace conet {
 
-static constexpr int DEFAULT_STACK_SIZE = 1024 * 64;
+static constexpr int kDefaultStackSize = 1024 * 64;
 
 class Coroutine: public nocopyable {
 public:
@@ -32,7 +32,7 @@ public:
     
 private:
     int m_cor_id{0};
-    int m_stack_size{DEFAULT_STACK_SIZE};
+    int m_stack_size{kDefaultStackSize};
     char* m_stack_sp{nullptr};
     coctx m_coctx;
 

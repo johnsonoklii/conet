@@ -20,16 +20,16 @@ LogOption& GLOBAL_OPTION() {
 
 const char* getLevelStr(LogLevel level) {
     switch (level) {
-        case DEBUG:
-            return "DEBUG";
-        case INFO:
-            return "INFO";
-        case WARN:
-            return "WARN";
-        case ERROR:
-            return "ERROR";
-        case FATAL:
-            return "FATAL";
+        case kDEBUG:
+            return "kDEBUG";
+        case kINFO:
+            return "kINFO";
+        case kWARN:
+            return "kWARN";
+        case kERROR:
+            return "kERROR";
+        case kFATAL:
+            return "kFATAL";
         default:
             return "UNKNOWN";
     }

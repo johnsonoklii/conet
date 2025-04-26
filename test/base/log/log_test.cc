@@ -1,7 +1,7 @@
 #include "conet/base/log/logger.h"
 
 void func1() {
-    GLOB_LOG_OPTION.setLevel(LogLevel::DEBUG);
+    GLOB_LOG_OPTION.setLevel(LogLevel::kDEBUG);
     GLOB_LOG_OPTION.setFileDir("/log/conet");
     GLOB_LOG_OPTION.setFileName("test");
     
@@ -16,7 +16,7 @@ void func2() {
 
 void func3() {
     LogOption option;
-    option.setLevel(LogLevel::DEBUG);
+    option.setLevel(LogLevel::kDEBUG);
     option.setFileDir("/log/conet");
     option.setFileName("test");
 

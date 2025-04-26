@@ -9,7 +9,7 @@
 namespace conet {
 namespace net {
 
-constexpr int kPollTimeMs = 1000 * 60; // 1min
+static constexpr int kPollTimeMs = 1000 * 60; // 1min
 
 static thread_local EventLoop* t_event_loop = nullptr;
 
