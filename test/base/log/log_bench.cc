@@ -6,7 +6,6 @@
 #include "conet/base/log/logger.h"
 
 using namespace std::chrono;
-using namespace conet::log;
 
 int main() {
     int num = 1000000;

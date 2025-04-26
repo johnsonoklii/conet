@@ -5,7 +5,6 @@
 #include <chrono>
 #include <iostream>
 
-using namespace conet::log;
 using namespace std::chrono;
 void worker1() {
     int num = 200000;

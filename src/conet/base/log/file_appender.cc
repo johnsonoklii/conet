@@ -26,14 +26,8 @@ FileAppender::FileAppender(const std::string& file_dir
 , m_roll_by_day(m_roll_by_day)
 , m_is_async(is_async)
 , m_flush_interval(flush_interval)
-, m_writen_bytes(0)
-, m_count(0)
-, m_roll_count(0)
 , m_check_everyn(check_everyn)
 , m_roll_size(roll_size)
-, m_last_period(0)
-, m_last_roll(0)
-, m_last_flush(0)
 , m_file(nullptr)
 , m_mutex(is_safe ? new std::mutex() : nullptr) {
         
@@ -93,9 +87,7 @@ void FileAppender::fwriteUnlocked(const char* msg, size_t len) {
     }
     
     write(msg, len);
-
     rollFileBySize();
-
     check(now);
 }
 

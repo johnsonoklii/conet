@@ -6,8 +6,6 @@
 #include <sys/eventfd.h>
 #include <unistd.h>
 
-using namespace conet::log;
-
 namespace conet {
 namespace net {
 

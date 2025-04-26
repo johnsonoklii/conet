@@ -7,8 +7,6 @@
 #include <netinet/tcp.h>
 #include <fcntl.h>
 
-using namespace conet::log;
-
 namespace conet {
 namespace net {
 

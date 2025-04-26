@@ -10,7 +10,7 @@ namespace log {
 
 void ConsoleAppender::append(const LogContext& ctx)  {
     std::string&& msg = ctx.m_formatter->format(ctx);
-    fwrite(msg.c_str(), sizeof(char), msg.size(), stdout);                     
+    ::fwrite(msg.c_str(), sizeof(char), msg.size(), stdout);                     
 }
 
 } // namespace log

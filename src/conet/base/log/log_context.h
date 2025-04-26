@@ -12,14 +12,14 @@ namespace conet {
 namespace log {
 
 struct LogContext {
-    const char* m_name;
-    const char* m_level;
-    const char* m_file_name;
+    const char* m_name{nullptr};
+    const char* m_level{nullptr};
+    const char* m_file_name{nullptr};
     std::string m_short_file_name;
-    int m_line;
-    pid_t m_tid;
+    int m_line{0};
+    pid_t m_tid{-1};
     std::string m_msg;
-    std::shared_ptr<LogFormatter> m_formatter;
+    std::shared_ptr<LogFormatter> m_formatter{nullptr};
 
     LogContext() {
     }

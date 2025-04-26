@@ -52,21 +52,21 @@ private:
 private:
     std::string m_file_dir;
     std::string m_file_name;
-    bool m_roll_by_day;
-    bool m_is_async;
-    int m_flush_interval;
-    size_t m_writen_bytes;
-    int m_count;                // 统计log次数
-    int m_roll_count;           // 统计roll次数
-    int m_check_everyn;
-    size_t m_roll_size;
-    time_t m_last_period;
-    time_t m_last_roll;
-    time_t m_last_flush;
+    bool m_roll_by_day{false};
+    bool m_is_async{false};
+    int m_flush_interval{0};
+    size_t m_writen_bytes{0};
+    int m_count{0};                // 统计log次数
+    int m_roll_count{0};           // 统计roll次数
+    int m_check_everyn{0};
+    size_t m_roll_size{0};
+    time_t m_last_period{0};
+    time_t m_last_roll{0};
+    time_t m_last_flush{0};
     
-    FILE* m_file;
-    AsyncLogging* m_async_logging;
-    std::unique_ptr<std::mutex> m_mutex;
+    FILE* m_file{nullptr};
+    AsyncLogging* m_async_logging{nullptr};
+    std::unique_ptr<std::mutex> m_mutex{nullptr};
 };
 
 } // namespace log

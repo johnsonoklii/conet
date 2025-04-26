@@ -9,6 +9,8 @@
 #include <unordered_map>
 #include <string>
 
+using namespace conet::log;
+
 namespace conet {
 namespace log { 
 
@@ -34,7 +36,7 @@ struct LogOption {
     size_t m_roll_size{1024 * 1024 * 64};   // 64MB
     int m_check_everyn{10000}; 
 
-    LogFormatterPtr m_formatter;
+    LogFormatter::sptr m_formatter;
 
     void setLevel(LogLevel level) { m_level = level;}
     LogLevel getLevel() const { return m_level; }
@@ -58,8 +60,8 @@ struct LogOption {
     size_t getRollSize() const { return m_roll_size; }
     void setCheckEveryn(int everyn) { m_check_everyn = everyn; }
     int getCheckEveryn() const { return m_check_everyn; }
-    void setFormatter(LogFormatterPtr formatter) { m_formatter = formatter; }
-    LogFormatterPtr getFormatter() const { return m_formatter; }
+    void setFormatter(LogFormatter::sptr formatter) { m_formatter = formatter; }
+    LogFormatter::sptr getFormatter() const { return m_formatter; }
 };
 
 /*
@@ -84,7 +86,7 @@ public:
     void setOption(const LogOption& option) { m_option = option; }
     LogOption getOption() const { return m_option; }
 
-    void addAppender(const std::string& name, LogAppenderPtr appender);
+    void addAppender(const std::string& name, LogAppender::sptr appender);
 
     void log(LogLevel level, const char* file_name, int line, const char* fmt, ...);
     
@@ -94,8 +96,8 @@ private:
 
 private:
     LogOption m_option;  
-    LogFormatterPtr m_formatter;
-    std::unordered_map<std::string, LogAppenderPtr> m_appenders;
+    LogFormatter::sptr m_formatter;
+    std::unordered_map<std::string, LogAppender::sptr> m_appenders;
 };
 
 } // namespace log
@@ -134,7 +136,7 @@ namespace log {
         abort(); \
     } while(0)
 
-} // namespace log
+} // namesapce log
 } // namespace conet
 
 

@@ -1,8 +1,5 @@
 #include "conet/base/log/logger.h"
 
-using namespace conet::log;
-// using namespace conet;
-
 void func1() {
     GLOB_LOG_OPTION.setLevel(LogLevel::DEBUG);
     GLOB_LOG_OPTION.setFileDir("/log/conet");

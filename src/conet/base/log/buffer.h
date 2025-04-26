@@ -82,8 +82,8 @@ public:
 private:
     inner_message* endAddr() { return m_data + SIZE; }
 
-    inner_message* m_data;
-    inner_message* m_current;
+    inner_message* m_data{nullptr};
+    inner_message* m_current{nullptr};
 };
 
 } // namespace log

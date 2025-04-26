@@ -43,8 +43,7 @@ Logger::Logger(const LogOption& option): m_option(option) {
     init();
 }
 
-Logger::~Logger() {
-}
+Logger::~Logger() {}
 
 void Logger::init() {
     if (m_option.isConsole()) {
@@ -71,7 +70,7 @@ Logger& Logger::getInstance() {
     return logger;
 }
 
-void Logger::addAppender(const std::string& name, LogAppenderPtr appender) {
+void Logger::addAppender(const std::string& name, LogAppender::sptr appender) {
     m_appenders.emplace(name, appender);
 }
 void Logger::log(LogLevel level, const char* file_name, int line, const char* fmt, ...) {

@@ -11,6 +11,7 @@ class LogContext;
 
 class LogFormatter {
 public:
+    using sptr = std::shared_ptr<LogFormatter>;
     LogFormatter() = default;
     virtual ~LogFormatter() = default;
 
@@ -19,7 +20,7 @@ public:
     static std::shared_ptr<LogFormatter> textFormatter();
 };
 
-using LogFormatterPtr = std::shared_ptr<LogFormatter>;
+
 
 } // namespace log
 } // namespace conet

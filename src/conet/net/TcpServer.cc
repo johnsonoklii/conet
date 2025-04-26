@@ -3,8 +3,6 @@
 
 #include "conet/base/log/logger.h"
 
-using namespace conet::log;
-
 namespace conet {
 namespace net {
 

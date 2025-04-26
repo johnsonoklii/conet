@@ -42,17 +42,17 @@ private:
 private:
     using Buffer = LogBuffer<kLargeBuffer>;
 
-    int m_flush_interval;
-    std::atomic<bool> m_running;
-    WaitGroup m_waitGroup;
+    int m_flush_interval{0};
+    std::atomic<bool> m_running{false};
+    WaitGroup m_wait_group;
     std::mutex m_mutex;
     std::condition_variable m_cond;
     std::unique_ptr<Thread> m_thread;
     FwriteCallback m_fwrite_cb;
     FlushCallback m_flush_cb;
 
-    Buffer m_curBuffer;    // 当前缓冲区
-    Buffer m_nextBuffer;   // 预留，减少内存分配
+    Buffer m_cur_buffer;    // 当前缓冲区
+    Buffer m_next_buffer;   // 预留，减少内存分配
     std::vector<Buffer> m_buffers;
 };
 

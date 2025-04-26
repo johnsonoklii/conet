@@ -5,8 +5,6 @@
 #include <unistd.h>
 #include <cassert>
 
-using namespace conet::log;
-
 namespace conet {
 namespace net {
 

@@ -11,7 +11,7 @@ namespace log {
 AsyncLogging::AsyncLogging(FwriteCallback&& cb, int flush_interval)
 : m_flush_interval(flush_interval)
 , m_running(false)
-, m_waitGroup(1)
+, m_wait_group(1)
 , m_fwrite_cb(std::move(cb)) {
 }
 
@@ -32,35 +32,35 @@ void AsyncLogging::doDone() {
 void AsyncLogging::start() {
     m_thread = std::unique_ptr<Thread>(new Thread("AsyncLogging", std::bind(&AsyncLogging::threadWorker, this))); // FIXME: 为什么这里使用shared_from_this就不会释放呢
     m_thread->start();
-    m_waitGroup.wait();
+    m_wait_group.wait();
 }
 
 void AsyncLogging::pushMsg(const LogContext& ctx) {
     assert(m_running);
     std::lock_guard<std::mutex> lock(m_mutex);
-    if (m_curBuffer.avail() > 0) {
-        m_curBuffer.push(inner_message{ctx});
+    if (m_cur_buffer.avail() > 0) {
+        m_cur_buffer.push(inner_message{ctx});
         return;
     }
 
-    m_buffers.push_back(std::move(m_curBuffer)); 
-    if (m_nextBuffer.valid()) {
-        m_curBuffer = std::move(m_nextBuffer);
+    m_buffers.push_back(std::move(m_cur_buffer)); 
+    if (m_next_buffer.valid()) {
+        m_cur_buffer = std::move(m_next_buffer);
     } else {
-        m_curBuffer = Buffer();
+        m_cur_buffer = Buffer();
     }
-    m_curBuffer.push(inner_message{ctx});
+    m_cur_buffer.push(inner_message{ctx});
     m_cond.notify_one();
 }
 
 void AsyncLogging::threadWorker() {
     try {
         m_running.store(true);
-        Buffer newBuffer1;                  // 备用缓存，减少内存分配
-        Buffer newBuffer2;
+        Buffer new_buffer1;                  // 备用缓存，减少内存分配
+        Buffer new_buffer2;
         std::vector<Buffer> buffers_write;  // 减小临界区
         buffers_write.reserve(16);
-        m_waitGroup.done();
+        m_wait_group.done();
 
         while (m_running.load()) {
             {
@@ -69,15 +69,15 @@ void AsyncLogging::threadWorker() {
                     m_cond.wait_for(lock, std::chrono::seconds(m_flush_interval));
                 }
 
-                // 因为到了刷盘时间，m_buffers可能是空，需要先将m_curBuffer输出
-                if (m_buffers.empty() && m_curBuffer.hasData()) {
-                    m_buffers.push_back(std::move(m_curBuffer));
-                    m_curBuffer = std::move(newBuffer1);
+                // 因为到了刷盘时间，m_buffers可能是空，需要先将m_cur_buffer输出
+                if (m_buffers.empty() && m_cur_buffer.hasData()) {
+                    m_buffers.push_back(std::move(m_cur_buffer));
+                    m_cur_buffer = std::move(new_buffer1);
                 }
 
                 buffers_write.swap(m_buffers);
-                if (!m_nextBuffer.valid()) {
-                    m_nextBuffer = std::move(newBuffer2);
+                if (!m_next_buffer.valid()) {
+                    m_next_buffer = std::move(new_buffer2);
                 }
             }
 
@@ -107,16 +107,16 @@ void AsyncLogging::threadWorker() {
                 buffers_write.resize(2);
             }
 
-            if (!newBuffer1.valid()) {
-                newBuffer1 = std::move(buffers_write.back());
+            if (!new_buffer1.valid()) {
+                new_buffer1 = std::move(buffers_write.back());
                 buffers_write.pop_back();
-                newBuffer1.reset();
+                new_buffer1.reset();
             }
 
-            if (!newBuffer2.valid()) {
-                newBuffer2 = std::move(buffers_write.back());
+            if (!new_buffer2.valid()) {
+                new_buffer2 = std::move(buffers_write.back());
                 buffers_write.pop_back();
-                newBuffer2.reset();
+                new_buffer2.reset();
             }
 
             buffers_write.clear(); 
@@ -134,8 +134,8 @@ void AsyncLogging::threadWorker() {
 }
 
 void AsyncLogging::doLast() {
-    if (m_curBuffer.hasData()) {
-        m_buffers.push_back(std::move(m_curBuffer));
+    if (m_cur_buffer.hasData()) {
+        m_buffers.push_back(std::move(m_cur_buffer));
     }
     for (auto& buffer : m_buffers) {
         for (const auto& it : buffer) {

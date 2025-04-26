@@ -13,13 +13,12 @@ class FileAppender;
 
 class LogAppender {
 public:
+    using sptr = std::shared_ptr<LogAppender>;
     virtual ~LogAppender() = default;
     virtual void append(const LogContext& ctx) = 0;
     static std::shared_ptr<ConsoleAppender> consoleAppender();
     static std::shared_ptr<FileAppender> fileAppender(const LogOption& option);
 };
-
-using LogAppenderPtr = std::shared_ptr<LogAppender>;
 
 } // namespace log
 } // namespace conet
