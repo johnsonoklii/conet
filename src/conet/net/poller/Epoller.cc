@@ -19,7 +19,7 @@ Epoller::Epoller()
 : m_events(kInitEventListSize) {
     m_efd = ::epoll_create1(EPOLL_CLOEXEC);
     if (m_efd == -1) {
-        LOG_FATAL("Epoller::Epoller() fatal: %s.", strerror(errno));
+        LOG_FATAL("Epoller::Epoller(): %s.", strerror(errno));
         return;
     }
 }
@@ -32,7 +32,8 @@ Epoller::~Epoller() {
 
 void Epoller::updateChannel(Channel* channel) {
     if (!valid()) {
-        LOG_FATAL("Epoller::updateChannel() fatal: efd is invalid.");
+        LOG_FATAL("Epoller::updateChannel(): efd is invalid.");
+        return;
     }
     if (!channel) {
         return;
@@ -75,7 +76,8 @@ void Epoller::poll(int timeout_ms, ChannelList* active_channels) {
     if (n < 0) {
         if (saved_errno != EINTR) {
             errno = saved_errno;
-            LOG_FATAL("Epoller::poll() fatal: %s.", strerror(saved_errno));
+            LOG_FATAL("Epoller::poll(): %s.", strerror(saved_errno));
+            return;
         }
     } else if (n == 0) {
         // nothing todo

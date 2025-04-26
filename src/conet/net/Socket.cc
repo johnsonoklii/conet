@@ -27,24 +27,24 @@ Socket Socket::createNonBlockSocket() {
 
 void Socket::bind(const InetAddress& addr) {
     if (!valid()) {
-        LOG_FATAL("Socket::bind fatal: fd is invalid.");
+        LOG_FATAL("Socket::bind(): fd is invalid.");
         return;
     }
 
     if (::bind(m_fd, addr.getSockAddr(), addr.getAddrLen()) == -1) {
-        LOG_FATAL("Socket::bind fatal: %s.", strerror(errno));
+        LOG_FATAL("Socket::bind(): %s.", strerror(errno));
         return;
     }
 }
 
 void Socket::listen() {
     if (!valid()) {
-        LOG_FATAL("Socket::listen fatal, fd is invalid.");
+        LOG_FATAL("Socket::listen(), fd is invalid.");
         return;
     }
 
     if (::listen(m_fd, SOMAXCONN) == -1) {
-        LOG_FATAL("Socket::listen fatal: %s.", strerror(errno));
+        LOG_FATAL("Socket::listen(): %s.", strerror(errno));
         return;
     }
 }

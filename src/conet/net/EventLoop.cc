@@ -30,7 +30,7 @@ EventLoop* EventLoop::getEventLoop() {
 
 EventLoop::EventLoop() {
     if (t_event_loop) {
-        LOG_FATAL("this thread has already create a eventloop.");
+        LOG_FATAL("EventLoop::EventLoop(): this thread has already create a eventloop.");
         return;
     }
 
@@ -83,7 +83,7 @@ void EventLoop::wakeup() {
     uint64_t one = 1;
     ssize_t n = ::write(m_wakeup_fd, &one, sizeof one);
     if (n != sizeof(one)) {
-        LOG_ERROR("writes %lu bytes instead of 8", n);
+        LOG_ERROR("EventLoop::wakeup(): writes %lu bytes instead of 8", n);
     }
 }
 
@@ -91,7 +91,7 @@ void EventLoop::handleRead() {
     uint64_t one = 1;
     ssize_t n = ::read(m_wakeup_fd, &one, sizeof one);
     if (n != sizeof one) {
-        LOG_DEBUG("read %lu bytes instead of 8", n);
+        LOG_DEBUG("EventLoop::handleRead(): read %lu bytes instead of 8", n);
     }
 }
 
@@ -106,7 +106,7 @@ void EventLoop::assertInLoopThread() {
 }
 
 void EventLoop::abortNotInLoopThread() {
-    LOG_FATAL("EventLoop is created in thread %d, current thread is %d", m_tid, ProcessInfo::tid());
+    LOG_FATAL("EventLoop::abortNotInLoopThread(): EventLoop is created in thread %d, current thread is %d", m_tid, ProcessInfo::tid());
 }
 
 void EventLoop::loop() {

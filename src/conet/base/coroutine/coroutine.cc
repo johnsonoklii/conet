@@ -6,8 +6,6 @@
 
 #include <atomic>
 
-using namespace conet::log;
-
 namespace conet {
 
 static thread_local Coroutine::sptr t_main_coroutine = nullptr;
@@ -83,7 +81,8 @@ void Coroutine::setCallback(std::function<void()> cb) {
     assert(m_stack_sp);
 
     if (this == t_main_coroutine.get()) {
-        LOG_ERROR("Coroutine::setCallback: can't set callback for main coroutine.")
+        LOG_ERROR("Coroutine::setCallback(): can't set callback for main coroutine.")
+        return;
     }
 
     m_callback = cb;
@@ -120,17 +119,17 @@ void Coroutine::resume(Coroutine::sptr co) {
 
 void Coroutine::yield() {
     if (!t_main_coroutine) {
-        LOG_ERROR("Coroutine::yield: main coroutine is nullptr.")
+        LOG_ERROR("Coroutine::yield(): main coroutine is nullptr.")
         return;
     }
 
     if (!t_cur_coroutine) {
-        LOG_ERROR("Coroutine::yield: current coroutine is nullptr.")
+        LOG_ERROR("Coroutine::yield(): current coroutine is nullptr.")
         return;
     }
 
     if (t_cur_coroutine == t_main_coroutine) {
-        LOG_ERROR("Coroutine::yield: current coroutine is main coroutine.")
+        LOG_ERROR("Coroutine::yield(): current coroutine is main coroutine.")
         return;
     }
 
