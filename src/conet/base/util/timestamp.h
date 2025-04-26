@@ -23,18 +23,18 @@ public:
     static Timestamp invalid();
 
     std::string toString() const;
-    bool isValid() const {  return m_systemTimePoint.time_since_epoch().count() > 0; }   
+    bool isValid() const {  return m_system_timePoint.time_since_epoch().count() > 0; }   
 
     int64_t microSecondsSinceEpoch() const;
     int64_t milliSecondsSinceEpoch() const;
     int64_t secondsSinceEpoch() const;
 
     bool operator<(const Timestamp& rhs) const {
-        return m_systemTimePoint < rhs.m_systemTimePoint;
+        return m_system_timePoint < rhs.m_system_timePoint;
     }
 
     bool operator==(const Timestamp& rhs) const {
-        return m_systemTimePoint == rhs.m_systemTimePoint;
+        return m_system_timePoint == rhs.m_system_timePoint;
     }
 
     // util
@@ -43,7 +43,7 @@ public:
 private:
     Timestamp(const std::chrono::system_clock::time_point& timePoint);
 
-    std::chrono::system_clock::time_point m_systemTimePoint;
+    std::chrono::system_clock::time_point m_system_timePoint;
 };
 
 } // namespace lemon

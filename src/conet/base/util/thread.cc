@@ -5,12 +5,12 @@
 
 namespace conet {
 
-std::atomic_int Thread::m_numCreated{0};
+std::atomic_int Thread::m_num_created{0};
 
 Thread::Thread(const std::string& name, ThreadFunc&& func)
 : m_name(name)
 , m_func(std::move(func))
-, m_waitGroup(1) {
+, m_wait_group(1) {
     setDefaultName();
 }
 
@@ -24,7 +24,7 @@ void Thread::start() {
     assert(!m_started);
     m_started = true;
     m_thread = std::thread([this] { runInThread(); });
-    m_waitGroup.wait();
+    m_wait_group.wait();
 }
 
 void Thread::join() {
@@ -36,7 +36,7 @@ void Thread::join() {
 
 void Thread::setDefaultName() {
     if (m_name.empty()) {
-        int num = m_numCreated.fetch_add(1);
+        int num = m_num_created.fetch_add(1);
         char buf[32];
         snprintf(buf, sizeof(buf), "Thread-%d", num);
         m_name = buf;
@@ -45,7 +45,7 @@ void Thread::setDefaultName() {
 
 void Thread::runInThread() {
     m_tid = ProcessInfo::tid();
-    m_waitGroup.done();
+    m_wait_group.done();
     m_func();
 }
 

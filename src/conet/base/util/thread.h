@@ -38,8 +38,8 @@ private:
     pid_t m_tid;
     ThreadFunc m_func;
     std::thread m_thread;
-    WaitGroup m_waitGroup;
-    static std::atomic_int m_numCreated;
+    WaitGroup m_wait_group;
+    static std::atomic_int m_num_created;
 };
 
 }
