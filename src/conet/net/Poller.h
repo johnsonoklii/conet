@@ -16,6 +16,7 @@ public:
     virtual ~Poller() = default;
 
     virtual void updateChannel(Channel* channel) = 0;
+    virtual void removeChannel(Channel* channel) = 0;
     virtual void poll(int timeout_ms, ChannelList* active_channels) = 0;
 
     static Poller* createPoller();

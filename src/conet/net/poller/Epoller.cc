@@ -13,6 +13,7 @@ static constexpr int kInitEventListSize = 16;
 enum {
     kNew = -1,
     kAdded = 1,
+    kDeleted = 2
 };
 
 Epoller::Epoller()
@@ -30,6 +31,25 @@ Epoller::~Epoller() {
     }
 }
 
+void Epoller::removeChannel(Channel* channel) {
+    int fd = channel->fd();
+    if (m_channels.find(fd) == m_channels.end()) {
+        return;
+    }
+
+    int index = channel->index();
+    assert(index == kAdded || index == kDeleted);
+    assert(m_channels[fd] == channel);
+
+    if (index == kAdded) {
+        update(EPOLL_CTL_DEL, channel);
+    }
+    channel->setIndex(kNew);
+    
+    size_t n = m_channels.erase(fd);
+    assert(n == 1);
+}
+
 void Epoller::updateChannel(Channel* channel) {
     if (!valid()) {
         LOG_FATAL("Epoller::updateChannel(): efd is invalid.");
@@ -41,18 +61,23 @@ void Epoller::updateChannel(Channel* channel) {
 
     int fd = channel->fd();
     const int index = channel->index();
-    if (index == kNew) {
-        // assert(m_channels.find(fd) == m_channels.end());
-        m_channels[fd] = channel;
+    if (index == kNew || index == kDeleted) {
+        if (index == kNew) {
+            assert(m_channels.find(fd) == m_channels.end());
+            m_channels[fd] = channel;
+        } else {
+            assert(m_channels.find(fd) != m_channels.end());
+            assert(m_channels[fd] == channel);
+        }
         channel->setIndex(kAdded);
         update(EPOLL_CTL_ADD, channel);
     } else {
         assert(m_channels.find(fd) != m_channels.end());
+        assert(m_channels[fd] == channel);
         assert(index == kAdded);
         if (channel->isNoneEvent()) {
             update(EPOLL_CTL_DEL, channel);
-            m_channels.erase(fd);
-            channel->setIndex(kNew);
+            channel->setIndex(kDeleted);
         } else {
             update(EPOLL_CTL_MOD, channel);
         }
@@ -66,7 +91,7 @@ void Epoller::update(int operation, Channel*channel) {
     event.data.ptr = channel;
     int fd = channel->fd();
     if (::epoll_ctl(m_efd, operation, fd, &event) < 0) {
-        LOG_FATAL("%s.", strerror(errno));
+        LOG_FATAL("Epoller::update(): %s.", strerror(errno));
     }
 }
 

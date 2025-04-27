@@ -11,7 +11,7 @@ public:
     Socket(int fd);
     ~Socket();
 
-    static Socket createNonBlockSocket();
+    static int createNonBlockSocket(sa_family_t family);
 
     int fd() const { return m_fd; }
     void setFd(int fd) { m_fd = fd; }
@@ -19,6 +19,8 @@ public:
     void bind(const InetAddress& addr);
     void listen();
     int accept(InetAddress* peer_addr);
+
+    ssize_t readv(const struct iovec *iovec, int count) const;
 
     void close();
 

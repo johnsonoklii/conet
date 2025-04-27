@@ -1,4 +1,5 @@
 #include "conet/net/Channel.h"
+#include "conet/base/log/logger.h"
 
 namespace conet {
 namespace net {
@@ -9,7 +10,8 @@ Channel::Channel(int fd): m_fd(fd) {
 void Channel::handleEvent() {
     if (m_revents & (EPOLLIN | EPOLLPRI | EPOLLRDHUP)) {
         if (m_co) {
-           Coroutine::resume(m_co);
+            Coroutine::resume(m_co);
+        //    m_co = nullptr;
         }
     }
 }

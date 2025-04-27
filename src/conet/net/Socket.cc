@@ -18,11 +18,13 @@ Socket::~Socket() {
     close();
 }
 
-Socket Socket::createNonBlockSocket() {
-    int fd = ::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, IPPROTO_TCP);
-    Socket sock(fd);
-    sock.setNonBlocking();
-    return sock;
+int Socket::createNonBlockSocket(sa_family_t family) {
+    int fd = ::socket(family, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, IPPROTO_TCP);
+    if (fd < 0) {
+        LOG_FATAL("Socket::createNonBlockSocket(): %s.", strerror(errno));
+        return -1;
+    }
+    return fd;
 }
 
 void Socket::bind(const InetAddress& addr) {
@@ -58,6 +60,10 @@ int Socket::accept(InetAddress* peer_addr) {
         peer_addr->setSockAddr(cli_addr);
     }
     return ret;
+}
+
+ssize_t Socket::readv(const struct iovec *iovec, int count) const {
+    return readv_hook(m_fd, iovec, count);
 }
 
 void Socket::close() {

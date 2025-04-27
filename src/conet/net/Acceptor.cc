@@ -6,15 +6,19 @@
 
 #include <unistd.h>
 #include <fcntl.h>
+#include <assert.h>
 
 namespace conet {
 namespace net {
 
-Acceptor::Acceptor(const InetAddress& listen_addr)
-: m_listen_addr(listen_addr)
-, m_accept_socket(Socket::createNonBlockSocket())
+Acceptor::Acceptor(EventLoop* loop, const InetAddress& listen_addr, bool reuse_port)
+: m_loop(loop)
+, m_listen_addr(listen_addr)
+, m_accept_socket(Socket::createNonBlockSocket(listen_addr.family()))
 , m_accept_channel(m_accept_socket.fd())
 , m_idle_fd(::open("/dev/null", O_RDONLY | O_CLOEXEC)) {
+    m_accept_socket.setReuseAddr(true);
+    m_accept_socket.setReusePort(reuse_port);
     m_accept_socket.bind(m_listen_addr);
     m_accept_socket.listen();
     // COMMENT: Channel的生命周期由Acceptor管理
@@ -22,6 +26,8 @@ Acceptor::Acceptor(const InetAddress& listen_addr)
 }
 
 int Acceptor::accept(InetAddress* peer_addr) {
+    m_loop->assertInLoopThread();
+    
     int ret = m_accept_socket.accept(peer_addr);
     if (ret < 0) {
         if (errno == EAGAIN || errno == EWOULDBLOCK) {

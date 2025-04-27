@@ -16,6 +16,7 @@ public:
 
     virtual void poll(int timeout_ms, ChannelList* active_channels);
     void updateChannel(Channel* channel);
+    void removeChannel(Channel* channel);
 
     bool valid() const { return m_efd > 0; }
 

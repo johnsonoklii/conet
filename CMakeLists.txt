@@ -10,14 +10,12 @@ endif()
 
 enable_language(ASM)
 
-option(CONET_BUILD_EXAMPLE "Build conet example" OFF)
-option(CONET_BUILD_TEST "Build conet test" OFF)
+option(CONET_BUILD_EXAMPLE "Build conet example" ON)
+option(CONET_BUILD_TEST "Build conet test" ON)
 option(ENABLE_CONET_DEBUG "Enable CONET_DEBUG macro" OFF)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Debug build detected, enabling debug options")
-    set(CONET_BUILD_EXAMPLE ON CACHE BOOL "Force ON for Debug build" FORCE)
-    set(CONET_BUILD_TEST ON CACHE BOOL "Force ON for Debug build" FORCE)
     set(ENABLE_CONET_DEBUG ON CACHE BOOL "Force ON for Debug build" FORCE)
 endif()
 

@@ -21,6 +21,7 @@ public:
     uint32_t getAddrLen() const { return m_addr_len; }
 
     std::string toIpPort() const;
+    sa_family_t family() const { return m_addr.sin_family; }
 
 private:
     sockaddr_in m_addr;

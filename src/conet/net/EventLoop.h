@@ -21,9 +21,11 @@ public:
     void loop();
     void stop();
     void updateChannel(Channel* channel);
+    void removeChannel(Channel* channel);
 
     void runCoroutineInLoop(const Coroutine::sptr& co);
     void queueInLoop(const Coroutine::sptr& co);
+    void assertInLoopThread();
 
 public:
     static EventLoop* getEventLoop();
@@ -33,7 +35,6 @@ private:
     void handleRead();
 
     bool isInLoopThread();
-    void assertInLoopThread();
     void abortNotInLoopThread();
 
 private:

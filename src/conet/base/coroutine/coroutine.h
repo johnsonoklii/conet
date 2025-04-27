@@ -9,7 +9,7 @@
 
 namespace conet {
 
-static constexpr int kDefaultStackSize = 1024 * 64;
+static constexpr int kDefaultStackSize = 1024 * 1024; // WARNING: 协程栈空间不能太小
 
 class Coroutine: public nocopyable {
 public:

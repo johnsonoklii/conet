@@ -60,8 +60,14 @@ void EventLoop::updateChannel(Channel* channel) {
     m_poller->updateChannel(channel);
 }
 
+void EventLoop::removeChannel(Channel* channel) {
+    assertInLoopThread();
+    m_poller->removeChannel(channel);
+}
+
 void EventLoop::runCoroutineInLoop(const Coroutine::sptr& co) {
-    if (isInLoopThread()) {
+    if (isInLoopThread() && Coroutine::isMainCoroutine()) {
+        LOG_DEBUG("EventLoop::runCoroutineInLoop(): running in main coroutine");
         Coroutine::resume(co);
     } else {
         queueInLoop(co);
