@@ -44,6 +44,7 @@ EventLoop::EventLoop() {
     updateChannel(m_wakeup_channel.get());
 
     t_event_loop = this;
+    m_timer_set.reset(new TimerSet(this));
 }
 
 EventLoop::~EventLoop() {
@@ -65,10 +66,11 @@ void EventLoop::removeChannel(Channel* channel) {
     m_poller->removeChannel(channel);
 }
 
-void EventLoop::runCoroutineInLoop(const Coroutine::sptr& co) {
+void EventLoop::runCoroutine(const Coroutine::sptr& co) {
     if (isInLoopThread() && Coroutine::isMainCoroutine()) {
         LOG_DEBUG("EventLoop::runCoroutineInLoop(): running in main coroutine");
         Coroutine::resume(co);
+        LOG_DEBUG("EventLoop::runCoroutineInLoop(): end..");
     } else {
         queueInLoop(co);
     }
@@ -123,6 +125,8 @@ void EventLoop::loop() {
     while (m_looping) {
         active_channels.clear();
         m_poller->poll(kPollTimeMs, &active_channels);
+
+        m_calling_co.store(true);
         for (Channel* channel : active_channels) {
             if (channel->fd() == m_wakeup_fd) {
                 handleRead();
@@ -132,7 +136,7 @@ void EventLoop::loop() {
         }
         
         std::vector<Coroutine::sptr> tmp_co_list;
-        m_calling_co.store(true);
+        
         {
             std::lock_guard<std::mutex> lock(m_mutex);
             tmp_co_list.swap(m_co_list);
@@ -144,6 +148,19 @@ void EventLoop::loop() {
         }
         m_calling_co.store(false);
     }
+}
+
+TimerId EventLoop::runAfter(int delay, const std::function<void()>& cb) {
+    return m_timer_set->addTimer(std::make_shared<Timer>(delay, false, cb));
+}
+
+TimerId EventLoop::runEvery(int interval, const std::function<void()>& cb) {
+    return m_timer_set->addTimer(std::make_shared<Timer>(interval, true, cb));
+}
+
+TimerId EventLoop::runAt(const Timestamp& time, const std::function<void()>& cb) {
+    double interval = time.milliSecondsSinceEpoch() - Timestamp::now().milliSecondsSinceEpoch();
+    return runAfter(interval, cb);
 }
 
 } // namespace net

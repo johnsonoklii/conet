@@ -27,7 +27,7 @@ public:
     static Coroutine::sptr getMainCoroutine();
     static bool isMainCoroutine();
 
-    static void resume(Coroutine::sptr co);
+    static void resume(const Coroutine::sptr& co);
     static void yield();
     
 private:

@@ -72,6 +72,7 @@ Coroutine::Coroutine(int stack_size, std::function<void()> cb)
 }
 
 Coroutine::~Coroutine() {
+    LOG_DEBUG("Coroutine::~Coroutine(): free stack sp.")
     if (m_stack_sp) {
         free(m_stack_sp);
     }
@@ -97,7 +98,7 @@ void Coroutine::setCallback(std::function<void()> cb) {
     m_coctx.regs[kRDI] = reinterpret_cast<char*>(this);
 }
 
-void Coroutine::resume(Coroutine::sptr co) {
+void Coroutine::resume(const Coroutine::sptr& co) {
     if (!t_main_coroutine) {
         LOG_ERROR("Coroutine::resume(): main coroutine is nullptr.")
         return;
@@ -133,8 +134,9 @@ void Coroutine::yield() {
         return;
     }
 
-    Coroutine::sptr co = t_cur_coroutine;
+    Coroutine* co = t_cur_coroutine.get(); // COMMENT: 这里不能用Coroutine::sptr,会导致co无法释放
     t_cur_coroutine = t_main_coroutine;
+
     coctx_swap(&co->m_coctx, &t_main_coroutine->m_coctx);
 }
 

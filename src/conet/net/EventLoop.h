@@ -2,6 +2,7 @@
 #define CONET_EVENTLOOP_H
 
 #include "conet/net/Poller.h"
+#include "conet/net/TimerSet.h"
 #include "conet/base/coroutine/coroutine.h"
 
 #include <atomic>
@@ -23,9 +24,14 @@ public:
     void updateChannel(Channel* channel);
     void removeChannel(Channel* channel);
 
-    void runCoroutineInLoop(const Coroutine::sptr& co);
+    void runCoroutine(const Coroutine::sptr& co);
     void queueInLoop(const Coroutine::sptr& co);
     void assertInLoopThread();
+
+    // TODO: 确定时间？s，ms，us？目前是毫秒
+    TimerId runAfter(int delay, const std::function<void()>& cb);
+    TimerId runEvery(int interval, const std::function<void()>& cb);
+    TimerId runAt(const Timestamp& time, const std::function<void()>& cb);
 
 public:
     static EventLoop* getEventLoop();
@@ -43,6 +49,8 @@ private:
     int m_wakeup_fd{0};
     Channel::sptr m_wakeup_channel{nullptr};
     pid_t m_tid{-1};
+
+    TimerSet::uptr m_timer_set{nullptr};
 
     std::mutex m_mutex;
     std::atomic_bool m_calling_co{false};

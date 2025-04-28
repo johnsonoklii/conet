@@ -24,6 +24,8 @@ enum {
 class Channel {
 public:
     using sptr = std::shared_ptr<Channel>;
+    using ReadCallback = std::function<void()>;
+
     Channel(int fd);
 
     void handleEvent();
@@ -45,6 +47,8 @@ public:
     void setIndex(int index) { m_index = index; }
     void setCoroutine(Coroutine::sptr co) { m_co = co; }
 
+    void setReadCallback(ReadCallback cb) { m_read_cb = cb; }
+
 private:
     int m_fd{-1};
     int m_revents{0};
@@ -52,6 +56,7 @@ private:
     int m_index{-1};
     
     Coroutine::sptr m_co;
+    ReadCallback m_read_cb;
 };
 
 class ChannelManager {
