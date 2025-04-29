@@ -5,6 +5,7 @@
 #include "conet/net/eventLoop.h"
 #include "conet/net/inet_address.h"
 #include "conet/net/buffer.h"
+#include "conet/base/util/timestamp.h"
 
 #include <memory>
 
@@ -31,9 +32,12 @@ public:
     void setCloseCallBack(const CloseCallBack& cb) { m_close_cb = std::move(cb); }
 
     int fd() const { return m_socket.fd(); }
+    Timestamp lastReadTime() const { return m_last_read_time; }
     
     bool connected() const { return m_state == kConnected; }
     bool disconnected() const { return m_state == kDisconnected; }
+
+    void shutdown();
 
     InetAddress localAddr() { return m_local_addr; }
     InetAddress peerAddr() { return m_peer_addr; }
@@ -41,6 +45,8 @@ public:
 private:
     enum StateE { kDisconnected, kConnecting, kConnected, kDisconnecting };
     void setState(StateE state) { m_state = state; }
+
+    void shutdownInLoop();
 
     void handleRead();
     void handleClose();
@@ -54,6 +60,7 @@ private:
     InetAddress m_peer_addr;
     Channel m_channel;
     StateE m_state{kConnecting};
+    Timestamp m_last_read_time;
 
     Buffer m_input_buffer;
     Buffer m_output_buffer;

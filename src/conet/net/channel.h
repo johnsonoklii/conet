@@ -51,6 +51,8 @@ public:
 
     void setReadCallback(ReadCallback cb) { m_read_cb = cb; }
 
+    bool isWriting() const { return m_events & kWriteEvent; }
+
 private:
     void update();
 
@@ -61,6 +63,7 @@ private:
     int m_events{0};
     int m_index{-1};
     
+    // COMMENT: 如果注册的函数中存在IO操作，注册协程；否则可以注册回调函数
     Coroutine::sptr m_co;
     ReadCallback m_read_cb;
 };
@@ -70,6 +73,7 @@ public:
     static ChannelManager& getInstance();
 
     void addChannel(Channel* channel);
+    void removeChannel(Channel* channel);
     Channel* getChannel(int fd);
 private:
     using ChannelMap = std::unordered_map<int, Channel*>;

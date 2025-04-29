@@ -10,13 +10,13 @@ namespace net {
 TcpServer::TcpServer(const InetAddress& local_addr)
 : m_main_loop(new EventLoop)
 , m_acceptor(new Acceptor(m_main_loop.get(), local_addr, true)) {
-
 }
 
 TcpServer::TcpServer(const std::string& ip, uint16_t port)
 : m_main_loop(new EventLoop) {
     InetAddress listen_addr(ip, port);
     m_acceptor = std::unique_ptr<Acceptor>(new Acceptor(m_main_loop.get(), listen_addr, true)); // FIXME: 服务器的配置
+
 }
 
 TcpServer::~TcpServer() {}
@@ -24,6 +24,7 @@ TcpServer::~TcpServer() {}
 void TcpServer::start() {
     LOG_DEBUG("TcpServer::start.");
     Coroutine::getMainCoroutine();
+    m_main_loop->runEvery(m_conn_timeout, std::bind(&TcpServer::timeoutTcpConnection, this));
 
     // FIXME: 这里考虑使用协程池来统一管理协程的生命周期，目前会通过t_cur_coroutine和channel来维护其生命周期
     Coroutine::sptr co = std::make_shared<Coroutine>(kDefaultStackSize, std::bind(&TcpServer::accept, this));
@@ -72,6 +73,29 @@ void TcpServer::removeConnection(TcpConnection* conn) {
 void TcpServer::removeConnectionInLoop(TcpConnection* conn) {
     m_main_loop->assertInLoopThread();
     m_connections.erase(conn->fd());
+}
+
+/*
+    FIXME: 
+    1. 需要遍历所有conn，连接多了会很耗时
+    2. 精度问题
+       1s, 2s, 3s, 4s, 5s | 6s, 7s, 8s, 9s, 10s
+        2.1 在等待2s后, conn接收数据，
+        2.2 第5s触发timeoutTcpConnection，此时conn没超时。
+        3.3 下次在10s触发timeoutTcpConnection。但实际上应该在6s时，conn就应该超时关闭
+
+    考虑使用时间轮
+*/
+void TcpServer::timeoutTcpConnection() {
+    LOG_DEBUG("TcpServer::timeoutTcpConnection().");
+    Timestamp now = Timestamp::now();
+    for (auto it = m_connections.begin(); it != m_connections.end(); ++it) {
+        TcpConnection::sptr conn = it->second;
+        int64_t pad_time = now.milliSecondsSinceEpoch() - conn->lastReadTime().milliSecondsSinceEpoch();
+        if (pad_time > m_conn_timeout) {
+            conn->shutdown();
+        }
+    }
 }
 
 } // namespace net

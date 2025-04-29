@@ -67,9 +67,9 @@ void EventLoop::removeChannel(Channel* channel) {
 
 void EventLoop::runCoroutine(const Coroutine::sptr& co) {
     if (isInLoopThread() && Coroutine::isMainCoroutine()) {
-        LOG_DEBUG("EventLoop::runCoroutineInLoop(): running in main coroutine");
+        // LOG_DEBUG("EventLoop::runCoroutineInLoop(): running in main coroutine");
         Coroutine::resume(co);
-        LOG_DEBUG("EventLoop::runCoroutineInLoop(): end..");
+        // LOG_DEBUG("EventLoop::runCoroutineInLoop(): end..");
     } else {
         queueInLoop(co);
     }

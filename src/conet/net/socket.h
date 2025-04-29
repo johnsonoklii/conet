@@ -21,6 +21,7 @@ public:
     int accept(InetAddress* peer_addr);
 
     ssize_t readv(const struct iovec *iovec, int count) const;
+    void shutdownWrite();
 
     void close();
 

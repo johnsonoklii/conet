@@ -36,7 +36,7 @@ public:
     Timer() = default;
     Timer(int interval, bool recursive, std::function<void()> callback);
     ~Timer() {
-        LOG_DEBUG("~Timer(): %d", m_timer_id.sequence());
+        // LOG_DEBUG("~Timer(): %d", m_timer_id.sequence());
     }
 
     static Timer* getNowTimer() {

@@ -72,7 +72,7 @@ Coroutine::Coroutine(int stack_size, std::function<void()> cb)
 }
 
 Coroutine::~Coroutine() {
-    LOG_DEBUG("Coroutine::~Coroutine(): free stack sp.")
+    // LOG_DEBUG("Coroutine::~Coroutine(): free stack sp.")
     if (m_stack_sp) {
         free(m_stack_sp);
     }

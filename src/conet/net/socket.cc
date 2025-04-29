@@ -73,6 +73,12 @@ void Socket::close() {
     }
 }
 
+void Socket::shutdownWrite() {
+    if (::shutdown(m_fd, SHUT_WR) == -1) {
+        LOG_ERROR("Socket::shutdownWrite(): %s.", strerror(errno));
+    }
+}
+
 void Socket::setNoDelay(bool on) {
     int optval = on ? 1 : 0;
     if(::setsockopt(m_fd, IPPROTO_TCP, TCP_NODELAY,

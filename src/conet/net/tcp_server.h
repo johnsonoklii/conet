@@ -28,11 +28,14 @@ private:
     void removeConnection(TcpConnection* conn);
     void removeConnectionInLoop(TcpConnection* conn);
 
+    void timeoutTcpConnection();
+
 private:
     EventLoop::uptr m_main_loop;
     Acceptor::uptr m_acceptor;
 
     ConnectionMap m_connections;
+    int m_conn_timeout{1000*60}; // 60s
     
     ConnectionCallBack m_connection_cb;
     MessageCallBack m_message_cb;

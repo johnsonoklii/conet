@@ -36,6 +36,10 @@ void ChannelManager::addChannel(Channel* channel) {
     m_channels[channel->fd()] = channel;
 }
 
+void ChannelManager::removeChannel(Channel* channel) {
+    m_channels.erase(channel->fd());
+}
+
 Channel* ChannelManager::getChannel(int fd) {
     if (m_channels.find(fd) != m_channels.end()) {
         return m_channels[fd];
