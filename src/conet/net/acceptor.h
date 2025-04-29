@@ -1,8 +1,8 @@
 #ifndef CONET_ACCEPTOR_H
 #define CONET_ACCEPTOR_H
 
-#include "conet/net/Socket.h"
-#include "conet/net/Channel.h"
+#include "conet/net/socket.h"
+#include "conet/net/channel.h"
 
 namespace conet {
 namespace net {

@@ -1,5 +1,5 @@
-#include "conet/net/EventLoop.h"
-#include "conet/net/Channel.h"
+#include "conet/net/eventLoop.h"
+#include "conet/net/channel.h"
 #include "conet/base/log/logger.h"
 #include "conet/base/util/process.h"
 

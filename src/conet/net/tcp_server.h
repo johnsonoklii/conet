@@ -1,9 +1,9 @@
 #ifndef CONET_NET_TCP_SERVER_H
 #define CONET_NET_TCP_SERVER_H
 
-#include "conet/net/EventLoop.h"
-#include "conet/net/Acceptor.h"
-#include "conet/net/TcpConnection.h"
+#include "conet/net/eventLoop.h"
+#include "conet/net/acceptor.h"
+#include "conet/net/tcp_connection.h"
 
 namespace conet {
 namespace net {

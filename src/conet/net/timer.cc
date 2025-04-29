@@ -1,4 +1,4 @@
-#include "conet/net/Timer.h"
+#include "conet/net/timer.h"
 
 #include <atomic>
 

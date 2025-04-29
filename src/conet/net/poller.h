@@ -1,7 +1,7 @@
 #ifndef CONET_POLLER_H
 #define CONET_POLLER_H
 
-#include "conet/net/Channel.h"
+#include "conet/net/channel.h"
 
 #include <vector>
 #include <unordered_map>

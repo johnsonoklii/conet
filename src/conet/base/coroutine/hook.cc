@@ -1,7 +1,7 @@
 #include "conet/base/coroutine/hook.h"
 #include "conet/base/coroutine/coroutine.h"
-#include "conet/net/EventLoop.h"
-#include "conet/net/Channel.h"
+#include "conet/net/eventLoop.h"
+#include "conet/net/channel.h"
 #include "conet/base/log/logger.h"
 
 #include <dlfcn.h>

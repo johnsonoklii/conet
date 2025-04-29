@@ -1,4 +1,4 @@
-#include "conet/net/Channel.h"
+#include "conet/net/channel.h"
 #include "conet/base/log/logger.h"
 
 namespace conet {

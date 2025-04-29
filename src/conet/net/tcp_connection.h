@@ -1,10 +1,10 @@
 #ifndef CONET_NET_TCP_CONNECTION_H
 #define CONET_NET_TCP_CONNECTION_H
 
-#include "conet/net/Socket.h"
-#include "conet/net/EventLoop.h"
-#include "conet/net/InetAddress.h"
-#include "conet/net/Buffer.h"
+#include "conet/net/socket.h"
+#include "conet/net/eventLoop.h"
+#include "conet/net/inet_address.h"
+#include "conet/net/buffer.h"
 
 #include <memory>
 

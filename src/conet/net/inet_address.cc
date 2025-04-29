@@ -1,4 +1,4 @@
-#include "conet/net/InetAddress.h"
+#include "conet/net/inet_address.h"
 
 #include <cstring>
 

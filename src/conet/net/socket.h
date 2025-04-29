@@ -1,7 +1,7 @@
 #ifndef CONET_SOCKET_H
 #define CONET_SOCKET_H
 
-#include "conet/net/InetAddress.h"
+#include "conet/net/inet_address.h"
 
 namespace conet {
 namespace net {

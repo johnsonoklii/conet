@@ -1,5 +1,5 @@
-#include "conet/net/Buffer.h"
-#include "conet/net/Socket.h"
+#include "conet/net/buffer.h"
+#include "conet/net/socket.h"
 
 #include <sys/uio.h>
 #include <errno.h>

@@ -1,8 +1,8 @@
 #ifndef CONET_NET_TIMERSET_H
 #define CONET_NET_TIMERSET_H
 
-#include "conet/net/Timer.h"
-#include "conet/net/Channel.h"
+#include "conet/net/timer.h"
+#include "conet/net/channel.h"
 
 #include <set>
 #include <vector>
