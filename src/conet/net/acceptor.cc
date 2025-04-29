@@ -15,7 +15,7 @@ Acceptor::Acceptor(EventLoop* loop, const InetAddress& listen_addr, bool reuse_p
 : m_loop(loop)
 , m_listen_addr(listen_addr)
 , m_accept_socket(Socket::createNonBlockSocket(listen_addr.family()))
-, m_accept_channel(m_accept_socket.fd())
+, m_accept_channel(loop, m_accept_socket.fd())
 , m_idle_fd(::open("/dev/null", O_RDONLY | O_CLOEXEC)) {
     m_accept_socket.setReuseAddr(true);
     m_accept_socket.setReusePort(reuse_port);

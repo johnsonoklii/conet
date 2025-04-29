@@ -37,11 +37,10 @@ EventLoop::EventLoop() {
     m_tid = ProcessInfo::tid();
 
     m_poller = Poller::createPoller();
+    
     m_wakeup_fd = createEventfd();
-
-    m_wakeup_channel = std::make_shared<Channel>(m_wakeup_fd);
+    m_wakeup_channel = std::make_shared<Channel>(this, m_wakeup_fd);
     m_wakeup_channel->enableRead();
-    updateChannel(m_wakeup_channel.get());
 
     t_event_loop = this;
     m_timer_set.reset(new TimerSet(this));

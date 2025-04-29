@@ -34,16 +34,13 @@ int accept_hook(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
         return ret;
     }
 
-    // 1. 获取当前线程的loop
-    EventLoop* loop = EventLoop::getEventLoop();
-    // 2. 获取channel
+    // 1. 获取channel
     Channel* channel = ChannelManager::getInstance().getChannel(sockfd);
-    // 3. 当前协程
+    // 2. 当前协程
     Coroutine::sptr co = Coroutine::getCurrentCoroutine();
     channel->setCoroutine(co);  // COMMENT: coroutine的生命周期由channel管理
-    // 4. 注册可读事件
+    // 3. 注册可读事件
     channel->enableRead();
-    loop->updateChannel(channel);
 
     LOG_DEBUG("accept_hook(): yield.");
     Coroutine::yield();
@@ -63,16 +60,13 @@ size_t readv_hook(int sockfd, const struct iovec *iovec, int count) {
         return ret;
     }
 
-    // 1. 获取当前线程的loop
-    EventLoop* loop = EventLoop::getEventLoop();
-    // 2. 获取channel
+    // 1. 获取channel
     Channel* channel = ChannelManager::getInstance().getChannel(sockfd);
-    // 3. 当前协程
+    // 2. 当前协程
     Coroutine::sptr co = Coroutine::getCurrentCoroutine();
     channel->setCoroutine(co);
-    // 4. 注册可读事件
+    // 3. 注册可读事件
     channel->enableRead();
-    loop->updateChannel(channel);
 
     LOG_DEBUG("readv_hook(): yield.");
     Coroutine::yield();

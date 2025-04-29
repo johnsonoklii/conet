@@ -42,10 +42,9 @@ void readTimerfd(int timer_fd) {
 TimerSet::TimerSet(EventLoop* loop)
 : m_loop(loop)
 , m_timer_fd(createTimerfd())
-, m_timer_channel(m_timer_fd) {
-    m_timer_channel.enableRead();
+, m_timer_channel(loop, m_timer_fd) {
     m_timer_channel.setReadCallback(std::bind(&TimerSet::handleRead, this));
-    m_loop->updateChannel(&m_timer_channel);
+    m_timer_channel.enableRead();
 }
 
 TimerSet::~TimerSet() {

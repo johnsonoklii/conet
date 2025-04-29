@@ -19,7 +19,7 @@ public:
     InetAddress getListenAddr() const { return m_listen_addr; }
 
 private:
-    EventLoop* m_loop;
+    EventLoop* m_loop{nullptr};
     InetAddress m_listen_addr;
     Socket m_accept_socket;
     Channel m_accept_channel;

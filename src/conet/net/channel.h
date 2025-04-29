@@ -21,20 +21,22 @@ enum {
     kWriteEvent = EPOLLOUT,
 };
 
+class EventLoop;
+
 class Channel {
 public:
     using sptr = std::shared_ptr<Channel>;
     using ReadCallback = std::function<void()>;
 
-    Channel(int fd);
+    Channel(EventLoop* loop, int fd);
 
     void handleEvent();
 
-    void enableRead() { m_events |= kReadEvent; }
-    void disableRead() { m_events &= ~kReadEvent; }
-    void enableWrite() { m_events |= kWriteEvent; }
-    void disableWrite() { m_events &= ~kWriteEvent; }
-    void disableAll() { m_events = kNoneEvent; }
+    void enableRead() { m_events |= kReadEvent; update();}
+    void disableRead() { m_events &= ~kReadEvent; update();}
+    void enableWrite() { m_events |= kWriteEvent; update();}
+    void disableWrite() { m_events &= ~kWriteEvent; update();}
+    void disableAll() { m_events = kNoneEvent; update();}
     bool isNoneEvent() const { return m_events == kNoneEvent; }
 
     int fd() const { return m_fd; }
@@ -50,6 +52,10 @@ public:
     void setReadCallback(ReadCallback cb) { m_read_cb = cb; }
 
 private:
+    void update();
+
+private:
+    EventLoop* m_loop;
     int m_fd{-1};
     int m_revents{0};
     int m_events{0};

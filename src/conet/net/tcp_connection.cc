@@ -9,13 +9,14 @@ TcpConnection::TcpConnection(EventLoop* loop, int fd, const InetAddress& local_a
 , m_socket(fd)
 , m_local_addr(local_addr)
 , m_peer_addr(peer_addr)
-, m_channel(fd) {
+, m_channel(loop, fd) {
     m_socket.setNonBlocking();
     // COMMENT: Channel的生命周期由TcpConnection管理
     ChannelManager::getInstance().addChannel(&m_channel);
 }
 
 TcpConnection::~TcpConnection() {
+    LOG_DEBUG("TcpConnection::~TcpConnection() fd: %d", m_socket.fd());
 }
 
 void TcpConnection::send(const std::string& msg) {

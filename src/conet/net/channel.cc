@@ -1,10 +1,13 @@
 #include "conet/net/channel.h"
+#include "conet/net/eventLoop.h"
 #include "conet/base/log/logger.h"
 
 namespace conet {
 namespace net {
 
-Channel::Channel(int fd): m_fd(fd) {
+Channel::Channel(EventLoop* loop, int fd)
+: m_loop(loop)
+, m_fd(fd) {
 }
 
 void Channel::handleEvent() {
@@ -18,6 +21,10 @@ void Channel::handleEvent() {
             m_read_cb();
         }
     }
+}
+
+void Channel::update() {
+    m_loop->updateChannel(this);
 }
 
 ChannelManager& ChannelManager::getInstance() {
