@@ -10,7 +10,7 @@ std::atomic_int Thread::m_num_created{0};
 Thread::Thread(const std::string& name, ThreadFunc&& func)
 : m_name(name)
 , m_func(std::move(func))
-, m_wait_group(1) {
+, m_wg(1) {
     setDefaultName();
 }
 
@@ -24,7 +24,7 @@ void Thread::start() {
     assert(!m_started);
     m_started = true;
     m_thread = std::thread([this] { runInThread(); });
-    m_wait_group.wait();
+    m_wg.wait();
 }
 
 void Thread::join() {
@@ -45,7 +45,7 @@ void Thread::setDefaultName() {
 
 void Thread::runInThread() {
     m_tid = ProcessInfo::tid();
-    m_wait_group.done();
+    m_wg.done();
     m_func();
 }
 

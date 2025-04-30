@@ -44,6 +44,7 @@ EventLoop::EventLoop() {
 
     t_event_loop = this;
     m_timer_set.reset(new TimerSet(this));
+    Coroutine::getMainCoroutine();
 }
 
 EventLoop::~EventLoop() {

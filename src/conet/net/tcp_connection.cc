@@ -12,8 +12,6 @@ TcpConnection::TcpConnection(EventLoop* loop, int fd, const InetAddress& local_a
 , m_channel(loop, fd)
 , m_last_read_time(Timestamp::now()) {
     m_socket.setNonBlocking();
-    // COMMENT: Channel的生命周期由TcpConnection管理
-    ChannelManager::getInstance().addChannel(&m_channel);
 }
 
 TcpConnection::~TcpConnection() {
@@ -28,6 +26,9 @@ void TcpConnection::send(const std::string& msg) {
 void TcpConnection::connectEstablished() {
     assert(m_state == kConnecting);
     setState(kConnected);
+
+    // COMMENT: Channel的生命周期由TcpConnection管理
+    ChannelManager::getInstance().addChannel(&m_channel);
 
     if (m_connection_cb) {
         m_connection_cb(this);

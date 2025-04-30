@@ -9,12 +9,15 @@
 #include <functional>
 #include <thread>
 #include <string>
+#include <memory>
 
 namespace conet {
 
 class Thread : public nocopyable {
 public:
+    using uptr = std::unique_ptr<Thread>;
     using ThreadFunc = std::function<void()>;
+    
     explicit Thread(const std::string& name, ThreadFunc&& func);
     ~Thread();
 
@@ -38,7 +41,7 @@ private:
     pid_t m_tid;
     ThreadFunc m_func;
     std::thread m_thread;
-    WaitGroup m_wait_group;
+    WaitGroup m_wg;
     static std::atomic_int m_num_created;
 };
 
