@@ -13,10 +13,11 @@ using namespace conet::net;
 
 HOOK_SYS_FUNC(accept);
 HOOK_SYS_FUNC(readv);
+HOOK_SYS_FUNC(write);
 
 namespace conet {
 
-static bool g_hook = true;
+static bool g_hook = false;
 
 void setHook() {
     g_hook = true;
@@ -37,10 +38,9 @@ int accept_hook(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
     // 1. 获取channel
     Channel* channel = ChannelManager::getInstance().getChannel(sockfd);
     // 2. 当前协程
-    Coroutine::sptr co = Coroutine::getCurrentCoroutine();
-    channel->setCoroutine(co);  // COMMENT: coroutine的生命周期由channel管理
+    Coroutine::sptr co = Coroutine::getCurrentCoroutine(); // COMMENT: coroutine的生命周期由channel管理
     // 3. 注册可读事件
-    channel->enableRead();
+    channel->enableRead(co);
 
     LOG_DEBUG("accept_hook(): yield.");
     Coroutine::yield();
@@ -48,7 +48,7 @@ int accept_hook(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
     return g_sys_accept_fun(sockfd, addr, addrlen);
 }
 
-size_t readv_hook(int sockfd, const struct iovec *iovec, int count) {
+ssize_t readv_hook(int sockfd, const struct iovec *iovec, int count) {
     LOG_DEBUG("readv_hook(): this is reav hook.")
     if (Coroutine::isMainCoroutine()) {
         LOG_DEBUG("readv_hook(): readv_hook is main coroutine.")
@@ -64,14 +64,38 @@ size_t readv_hook(int sockfd, const struct iovec *iovec, int count) {
     Channel* channel = ChannelManager::getInstance().getChannel(sockfd);
     // 2. 当前协程
     Coroutine::sptr co = Coroutine::getCurrentCoroutine();
-    channel->setCoroutine(co);
     // 3. 注册可读事件
-    channel->enableRead();
+    channel->enableRead(co);
 
     LOG_DEBUG("readv_hook(): yield.");
     Coroutine::yield();
 
     return g_sys_readv_fun(sockfd, iovec, count);
+}
+
+ssize_t write_hook(int sockfd, const char* buf, size_t len) {
+    LOG_DEBUG("write_hook(): this is write hook.")
+    if (Coroutine::isMainCoroutine()) {
+        LOG_DEBUG("write_hook(): readv_hook is main coroutine.")
+        return g_sys_write_fun(sockfd, buf, len);
+    }
+
+    int ret = g_sys_write_fun(sockfd, buf, len);
+    if (ret > 0) {
+        return ret;
+    }
+
+    // 1. 获取channel
+    Channel* channel = ChannelManager::getInstance().getChannel(sockfd);
+    // 2. 当前协程
+    Coroutine::sptr co = Coroutine::getCurrentCoroutine();
+    // 3. 注册可写事件
+    channel->enableWrite(co);
+
+    LOG_DEBUG("write_hook(): yield.");
+    Coroutine::yield();
+
+    return g_sys_write_fun(sockfd, buf, len);
 }
 
 extern "C" {
@@ -83,12 +107,21 @@ int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
     }
 }
 
-size_t readv(int sockfd, const struct iovec *iovec, int count) {
+ssize_t readv(int sockfd, const struct iovec *iovec, int count) {
     if (!conet::g_hook) {
         return g_sys_readv_fun(sockfd, iovec, count);
     } else {
         return conet::readv_hook(sockfd, iovec, count);
     }
+}
+
+ssize_t write(int sockfd, const char* buf, size_t len) {
+    if (!conet::g_hook) {
+        return g_sys_write_fun(sockfd, buf, len);
+    } else {
+        return conet::write_hook(sockfd, buf, len);
+    }
+
 }
 } // extern "C"
 

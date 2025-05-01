@@ -62,8 +62,12 @@ int Socket::accept(InetAddress* peer_addr) {
     return ret;
 }
 
-ssize_t Socket::readv(const struct iovec *iovec, int count) const {
+size_t Socket::readv(const struct iovec *iovec, int count) const {
     return readv_hook(m_fd, iovec, count);
+}
+
+size_t Socket::write(const char* buf, size_t len) const {
+    return write_hook(m_fd, buf, len);
 }
 
 void Socket::close() {

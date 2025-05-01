@@ -47,8 +47,10 @@ private:
     void setState(StateE state) { m_state = state; }
 
     void shutdownInLoop();
+    void sendInLoop(const std::string& msg);
 
     void handleRead();
+    void handleWrite();
     void handleClose();
     void handleError();
     

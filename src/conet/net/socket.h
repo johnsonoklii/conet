@@ -20,9 +20,10 @@ public:
     void listen();
     int accept(InetAddress* peer_addr);
 
-    ssize_t readv(const struct iovec *iovec, int count) const;
-    void shutdownWrite();
+    size_t readv(const struct iovec *iovec, int count) const;
+    size_t write(const char* buf, size_t len) const;
 
+    void shutdownWrite();
     void close();
 
     void setNoDelay(bool on);

@@ -5,7 +5,7 @@ void onConnection(conet::net::TcpConnection* conn) {
     if (conn->connected()) {
         LOG_INFO("connection established, fd: %d, peer addr: %s.", conn->fd(), conn->peerAddr().toIpPort().c_str());
     } else {
-        LOG_INFO("connection closed, fd: %d, peer addr: %s.", conn->fd(), conn->peerAddr().toIpPort().c_str());
+        // LOG_INFO("connection closed, fd: %d, peer addr: %s.", conn->fd(), conn->peerAddr().toIpPort().c_str());
     }
 }
 
@@ -16,7 +16,7 @@ void onMessage(conet::net::TcpConnection* conn, conet::net::Buffer* buffer) {
 }
 
 int main() {
-    conet::net::TcpServer server("127.0.0.1", 7981, "test_server");
+    conet::net::TcpServer server("0.0.0.0", 7777, "test_server");
     server.setThreadNum(4);
     server.setConnectionCallBack(onConnection);
     server.setMessageCallBack(onMessage);

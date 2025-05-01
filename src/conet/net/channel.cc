@@ -13,12 +13,15 @@ Channel::Channel(EventLoop* loop, int fd)
 void Channel::handleEvent() {
     // FIXME: error, write事件
     if (m_revents & (EPOLLIN | EPOLLPRI | EPOLLRDHUP)) {
-        if (m_co) {
-            Coroutine::resume(m_co);
-        //    m_co = nullptr;
+        if (m_read_co) {
+            Coroutine::resume(m_read_co);
         }
         if (m_read_cb) {
             m_read_cb();
+        }
+    } else if (m_revents & EPOLLOUT) {
+        if (m_write_co) {
+            Coroutine::resume(m_write_co);
         }
     }
 }

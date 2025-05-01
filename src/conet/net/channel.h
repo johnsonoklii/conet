@@ -32,9 +32,9 @@ public:
 
     void handleEvent();
 
-    void enableRead() { m_events |= kReadEvent; update();}
+    void enableRead(const Coroutine::sptr& co) { m_events |= kReadEvent; setReadCoroutine(co); update();}
     void disableRead() { m_events &= ~kReadEvent; update();}
-    void enableWrite() { m_events |= kWriteEvent; update();}
+    void enableWrite(const Coroutine::sptr& co) { m_events |= kWriteEvent; setWriteCoroutine(co); update();}
     void disableWrite() { m_events &= ~kWriteEvent; update();}
     void disableAll() { m_events = kNoneEvent; update();}
     bool isNoneEvent() const { return m_events == kNoneEvent; }
@@ -47,7 +47,8 @@ public:
 
     int index() const { return m_index; }
     void setIndex(int index) { m_index = index; }
-    void setCoroutine(Coroutine::sptr co) { m_co = co; }
+    void setReadCoroutine(const Coroutine::sptr& co) { m_read_co = co; }
+    void setWriteCoroutine(const Coroutine::sptr& co) { m_write_co = co; }
 
     void setReadCallback(ReadCallback cb) { m_read_cb = cb; }
 
@@ -64,7 +65,8 @@ private:
     int m_index{-1};
     
     // COMMENT: 如果注册的函数中存在IO操作，注册协程；否则可以注册回调函数
-    Coroutine::sptr m_co;
+    Coroutine::sptr m_read_co;
+    Coroutine::sptr m_write_co;
     ReadCallback m_read_cb;
 };
 

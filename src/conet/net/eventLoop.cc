@@ -40,7 +40,7 @@ EventLoop::EventLoop() {
     
     m_wakeup_fd = createEventfd();
     m_wakeup_channel = std::make_shared<Channel>(this, m_wakeup_fd);
-    m_wakeup_channel->enableRead();
+    m_wakeup_channel->enableRead(nullptr);
 
     t_event_loop = this;
     m_timer_set.reset(new TimerSet(this));
