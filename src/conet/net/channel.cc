@@ -15,6 +15,9 @@ void Channel::handleEvent() {
     if (m_revents & (EPOLLIN | EPOLLPRI | EPOLLRDHUP)) {
         if (m_read_co) {
             Coroutine::resume(m_read_co);
+            if (m_read_co->getState() == Coroutine::kFinished) {
+                m_read_co.reset();
+            }
         }
         if (m_read_cb) {
             m_read_cb();
@@ -22,6 +25,9 @@ void Channel::handleEvent() {
     } else if (m_revents & EPOLLOUT) {
         if (m_write_co) {
             Coroutine::resume(m_write_co);
+            if (m_write_co->getState() == Coroutine::kFinished) {
+                m_write_co.reset();
+            }
         }
     }
 }

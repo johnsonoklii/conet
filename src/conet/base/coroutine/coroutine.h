@@ -14,6 +14,14 @@ static constexpr int kDefaultStackSize = 1024 * 1024; // WARNING: 协程栈空�
 class Coroutine: public nocopyable {
 public:
     using sptr = std::shared_ptr<Coroutine>;
+
+    enum State {
+        kReady,
+        kRunning,
+        kSuspend,
+        kFinished
+    };
+
     // only for main coroutine
     Coroutine();
     Coroutine(int stack_size);
@@ -27,6 +35,9 @@ public:
     static Coroutine::sptr getMainCoroutine();
     static bool isMainCoroutine();
 
+    State  getState() const { return m_state; }
+    void setState(State state) { m_state = state; }
+
     static void resume(const Coroutine::sptr& co);
     static void yield();
     
@@ -34,6 +45,8 @@ private:
     int m_cor_id{0};
     int m_stack_size{kDefaultStackSize};
     char* m_stack_sp{nullptr};
+    State m_state{kReady};
+
     coctx m_coctx;
 
 public:

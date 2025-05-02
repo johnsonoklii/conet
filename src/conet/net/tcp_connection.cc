@@ -62,9 +62,9 @@ void TcpConnection::sendInLoop(const std::string& msg) {
 
         Coroutine::sptr co;
         if (m_mode == kLT) {
-            co = std::make_shared<Coroutine>(kDefaultStackSize, std::bind(&TcpConnection::handleWriteLT, this));
+            co = std::make_shared<Coroutine>(kDefaultStackSize, std::bind(&TcpConnection::handleWriteLT, shared_from_this()));
         } else {
-            co = std::make_shared<Coroutine>(kDefaultStackSize, std::bind(&TcpConnection::handleWriteET, this));
+            co = std::make_shared<Coroutine>(kDefaultStackSize, std::bind(&TcpConnection::handleWriteET, shared_from_this()));
         }
         m_channel.enableWrite(co);
     }
@@ -78,14 +78,14 @@ void TcpConnection::connectEstablished() {
     ChannelManager::getInstance().addChannel(&m_channel);
 
     if (m_connection_cb) {
-        m_connection_cb(this);
+        m_connection_cb(shared_from_this());
     }
 
     Coroutine::sptr co;
     if (m_mode == kLT) {
-        co = std::make_shared<Coroutine>(kDefaultStackSize, std::bind(&TcpConnection::handleReadLT, this));
+        co = std::make_shared<Coroutine>(kDefaultStackSize, std::bind(&TcpConnection::handleReadLT, shared_from_this()));
     } else {
-        co = std::make_shared<Coroutine>(kDefaultStackSize, std::bind(&TcpConnection::handleReadET, this));
+        co = std::make_shared<Coroutine>(kDefaultStackSize, std::bind(&TcpConnection::handleReadET, shared_from_this()));
     }
     m_channel.enableRead(co);
 }
@@ -97,7 +97,16 @@ void TcpConnection::handleReadLT() {
         ssize_t n = m_input_buffer.readSocket(m_socket, &save_errno);
         m_last_read_time = Timestamp::now();
         if (n > 0) {
-            m_message_cb(this, &m_input_buffer);
+            /*
+                COMMENT: 这里需要shared_from_this()，如果出现超时断连，在删除conn前，对端发送了消息，
+                        然后删除conn，然后再触发可读事件，此时就会core dump
+            shutdown, 
+                    对端send2,
+                             对端收到shutdown，close,
+                                                    触发读事件close, 删除conn,
+                                                                        (因为网络延迟，此时才收到send2) 触发读事件，core dump         
+            */
+            m_message_cb(shared_from_this(), &m_input_buffer);
         } else if (n == 0) {
             handleClose();
             return;
@@ -128,7 +137,7 @@ void TcpConnection::handleReadET() {
         ssize_t n = m_input_buffer.readSocket(m_socket, &save_errno);
         m_last_read_time = Timestamp::now();
         if (n > 0) {
-            m_message_cb(this, &m_input_buffer);
+            m_message_cb(shared_from_this(), &m_input_buffer);
         } else if (n == 0) {
             handleClose();
             return;
@@ -149,7 +158,6 @@ void TcpConnection::handleReadET() {
     }
 }
 
-// TODO: LT模式和ET模式
 void TcpConnection::handleWriteLT() {
     m_loop->assertInLoopThread();
 
@@ -163,7 +171,6 @@ void TcpConnection::handleWriteLT() {
                     m_channel.disableWrite();
                     if (m_state == kDisconnecting) { // COMMENT: 之前想关闭时，还要写数据。现在写完了, 就关闭
                         shutdownInLoop();
-                        return;
                     }
                     return;
                 }
@@ -252,9 +259,9 @@ void TcpConnection::handleClose() {
     m_loop->removeChannel(&m_channel); // COMMENT: LT模式下，这里必须清除所有事件，否则对端关闭时，会一直触发EPOLLIN事件
 
     if (m_connection_cb) {
-        m_connection_cb(this);
+        m_connection_cb(shared_from_this());
     }
-    m_close_cb(this);
+    m_close_cb(shared_from_this());
 }
 
 void TcpConnection::handleError() {
@@ -304,7 +311,7 @@ void TcpConnection::shutdownInLoop() {
         } else {
             m_socket.shutdownWrite();
         }
-    }
+    }                          
 }
 
 } // namespace net

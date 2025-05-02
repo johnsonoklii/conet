@@ -46,6 +46,7 @@ bool Coroutine::isMainCoroutine() {
 void coRun(Coroutine* co) {
     assert(co);
     co->m_callback();
+    co->setState(Coroutine::kFinished);
     Coroutine::yield();
 }
 
@@ -99,6 +100,7 @@ void Coroutine::setCallback(std::function<void()> cb) {
 }
 
 void Coroutine::resume(const Coroutine::sptr& co) {
+    assert(co->getState() == kReady || co->getState() == kSuspend);
     if (!t_main_coroutine) {
         LOG_ERROR("Coroutine::resume(): main coroutine is nullptr.")
         return;
@@ -114,11 +116,14 @@ void Coroutine::resume(const Coroutine::sptr& co) {
         return;
     }
 
+    co->setState(State::kRunning);
+
     t_cur_coroutine = co;
     coctx_swap(&t_main_coroutine->m_coctx, &co->m_coctx);
 }
 
 void Coroutine::yield() {
+    
     if (!t_main_coroutine) {
         LOG_ERROR("Coroutine::yield(): main coroutine is nullptr.")
         return;
@@ -137,6 +142,11 @@ void Coroutine::yield() {
     Coroutine* co = t_cur_coroutine.get(); // COMMENT: 这里不能用Coroutine::sptr,会导致co无法释放
     t_cur_coroutine = t_main_coroutine;
 
+    assert(co->getState() == kRunning || co->getState() == kFinished);
+    if (co->getState() == kRunning) {
+        co->setState(kSuspend);
+    }
+    
     coctx_swap(&co->m_coctx, &t_main_coroutine->m_coctx);
 }
 

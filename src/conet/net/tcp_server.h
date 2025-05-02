@@ -13,8 +13,8 @@ namespace net {
 class TcpServer {
 public:
     using ConnectionMap = std::unordered_map<int, TcpConnection::sptr>;
-    using MessageCallBack = std::function<void(TcpConnection*, Buffer*)>;
-    using ConnectionCallBack = std::function<void(TcpConnection*)>;
+    using MessageCallBack = std::function<void(TcpConnection::sptr, Buffer*)>;
+    using ConnectionCallBack = std::function<void(TcpConnection::sptr)>;
 
     TcpServer(const InetAddress& listen_addr, const std::string& name, TcpMode mode = kLT);
     TcpServer(const std::string& ip, uint16_t port, const std::string& name, TcpMode mode = kLT);
@@ -30,8 +30,8 @@ public:
 
 private:
     void accept();
-    void removeConnection(TcpConnection* conn);
-    void removeConnectionInLoop(TcpConnection* conn);
+    void removeConnection(TcpConnection::sptr conn);
+    void removeConnectionInLoop(TcpConnection::sptr conn);
 
     void timeoutTcpConnection();
 

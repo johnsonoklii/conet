@@ -69,19 +69,17 @@ void TcpServer::accept() {
         // COMMENT: conn的生命周期由TcpServer管理
         m_connections[cfd] = conn;
 
-        // WARNING: 这里协程需要使用 conn.get()，否则会导致conn无法析构 
-        // 原因? 如果用conn的shared_ptr，conn_co会持有conn，而channel会持有conn_co，conn又会持有channel，导致循环引用，无法析构
-        Coroutine::sptr conn_co = std::make_shared<Coroutine>(kDefaultStackSize, std::bind(&TcpConnection::connectEstablished, conn.get()));
+        Coroutine::sptr conn_co = std::make_shared<Coroutine>(kDefaultStackSize, std::bind(&TcpConnection::connectEstablished, conn));
         sub_loop->runCoroutine(conn_co);
     }
 }
 
-void TcpServer::removeConnection(TcpConnection* conn) {
+void TcpServer::removeConnection(TcpConnection::sptr conn) {
     Coroutine::sptr co = std::make_shared<Coroutine>(kDefaultStackSize, std::bind(&TcpServer::removeConnectionInLoop, this, conn));
     m_main_loop->runCoroutine(co);
 }
 
-void TcpServer::removeConnectionInLoop(TcpConnection* conn) {
+void TcpServer::removeConnectionInLoop(TcpConnection::sptr conn) {
     m_main_loop->assertInLoopThread();
     m_connections.erase(conn->fd());
 }

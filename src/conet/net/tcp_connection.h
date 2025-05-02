@@ -14,14 +14,13 @@ namespace net {
 
 enum TcpMode { kLT, kET };
 
-
 class TcpConnection: public std::enable_shared_from_this<TcpConnection> {
 public:
     using sptr = std::shared_ptr<TcpConnection>;
 
-    using MessageCallBack = std::function<void(TcpConnection*, Buffer*)>;
-    using ConnectionCallBack = std::function<void(TcpConnection*)>;
-    using CloseCallBack = std::function<void(TcpConnection*)>;
+    using MessageCallBack = std::function<void(TcpConnection::sptr, Buffer*)>;
+    using ConnectionCallBack = std::function<void(TcpConnection::sptr)>;
+    using CloseCallBack = std::function<void(TcpConnection::sptr)>;
 
     TcpConnection(EventLoop* loop, int fd, const InetAddress& local_addr, const InetAddress& peer_addr, TcpMode mode=kLT);
     ~TcpConnection();

@@ -1,7 +1,7 @@
 #include "conet/net/tcp_server.h"
 #include "conet/base/log/logger.h"
 
-void onConnection(conet::net::TcpConnection* conn) {
+void onConnection(conet::net::TcpConnection::sptr conn) {
     if (conn->connected()) {
         LOG_INFO("connection established, fd: %d, peer addr: %s.", conn->fd(), conn->peerAddr().toIpPort().c_str());
     } else {
@@ -9,7 +9,7 @@ void onConnection(conet::net::TcpConnection* conn) {
     }
 }
 
-void onMessage(conet::net::TcpConnection* conn, conet::net::Buffer* buffer) {
+void onMessage(conet::net::TcpConnection::sptr conn, conet::net::Buffer* buffer) {
     std::string msg = buffer->retrieveAllAsString();
     LOG_INFO("recv msg: %s", msg.c_str());
     conn->send(msg);
