@@ -7,18 +7,20 @@
 namespace conet {
 namespace net {
 
-TcpServer::TcpServer(const InetAddress& local_addr, const std::string& name)
+TcpServer::TcpServer(const InetAddress& local_addr, const std::string& name, TcpMode mode)
 : m_main_loop(new EventLoop)
 , m_acceptor(new Acceptor(m_main_loop.get(), local_addr, true))
 , m_eventloop_threadpool(new EventLoopThreadPool(m_main_loop.get(), name))
-, m_name(name) {
+, m_name(name)
+, m_mode(mode) {
     
 }
 
-TcpServer::TcpServer(const std::string& ip, uint16_t port, const std::string& name)
+TcpServer::TcpServer(const std::string& ip, uint16_t port, const std::string& name, TcpMode mode)
 : m_main_loop(new EventLoop)
 , m_eventloop_threadpool(new EventLoopThreadPool(m_main_loop.get(), name))
-, m_name(name) {
+, m_name(name)
+, m_mode(mode) {
     InetAddress listen_addr(ip, port);
     m_acceptor = std::unique_ptr<Acceptor>(new Acceptor(m_main_loop.get(), listen_addr, true)); // FIXME: 服务器的配置
 }

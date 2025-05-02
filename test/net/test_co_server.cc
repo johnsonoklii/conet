@@ -16,7 +16,7 @@ void onMessage(conet::net::TcpConnection* conn, conet::net::Buffer* buffer) {
 }
 
 int main() {
-    conet::setHook(true);
+    conet::setHook(false);
     conet::net::TcpServer server("0.0.0.0", 7777, "test_server");
     server.setThreadNum(4);
     server.setConnectionCallBack(onConnection);

@@ -16,8 +16,8 @@ public:
     using MessageCallBack = std::function<void(TcpConnection*, Buffer*)>;
     using ConnectionCallBack = std::function<void(TcpConnection*)>;
 
-    TcpServer(const InetAddress& listen_addr, const std::string& name);
-    TcpServer(const std::string& ip, uint16_t port, const std::string& name);
+    TcpServer(const InetAddress& listen_addr, const std::string& name, TcpMode mode = kLT);
+    TcpServer(const std::string& ip, uint16_t port, const std::string& name, TcpMode mode = kLT);
     ~TcpServer();
 
     void start();
@@ -45,6 +45,7 @@ private:
     int m_conn_timeout{1000*60}; // 60s 
     std::string m_name;
     std::once_flag m_started;
+    TcpMode m_mode{kLT};
     
     EventLoopThread::ThreadInitCallback m_thread_init_cb;
     ConnectionCallBack m_connection_cb;

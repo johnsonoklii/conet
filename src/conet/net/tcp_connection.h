@@ -12,6 +12,9 @@
 namespace conet {
 namespace net {
 
+enum TcpMode { kLT, kET };
+
+
 class TcpConnection: public std::enable_shared_from_this<TcpConnection> {
 public:
     using sptr = std::shared_ptr<TcpConnection>;
@@ -20,7 +23,7 @@ public:
     using ConnectionCallBack = std::function<void(TcpConnection*)>;
     using CloseCallBack = std::function<void(TcpConnection*)>;
 
-    TcpConnection(EventLoop* loop, int fd, const InetAddress& local_addr, const InetAddress& peer_addr);
+    TcpConnection(EventLoop* loop, int fd, const InetAddress& local_addr, const InetAddress& peer_addr, TcpMode mode=kLT);
     ~TcpConnection();
 
     void send(const std::string& msg);
@@ -49,8 +52,11 @@ private:
     void shutdownInLoop();
     void sendInLoop(const std::string& msg);
 
-    void handleRead();
-    void handleWrite();
+    void handleReadLT();
+    void handleReadET();
+    
+    void handleWriteLT();
+    void handleWriteET();
     void handleClose();
     void handleError();
     
@@ -63,6 +69,8 @@ private:
     Channel m_channel;
     StateE m_state{kConnecting};
     Timestamp m_last_read_time;
+
+    TcpMode m_mode{kLT};
 
     Buffer m_input_buffer;
     Buffer m_output_buffer;

@@ -6,13 +6,14 @@
 namespace conet {
 namespace net {
 
-TcpConnection::TcpConnection(EventLoop* loop, int fd, const InetAddress& local_addr, const InetAddress& peer_addr)
+TcpConnection::TcpConnection(EventLoop* loop, int fd, const InetAddress& local_addr, const InetAddress& peer_addr, TcpMode mode)
 : m_loop(loop)
 , m_socket(fd)
 , m_local_addr(local_addr)
 , m_peer_addr(peer_addr)
 , m_channel(loop, fd)
-, m_last_read_time(Timestamp::now()) {
+, m_last_read_time(Timestamp::now())
+, m_mode(mode) {
     m_socket.setNonBlocking();
 }
 
@@ -42,7 +43,7 @@ void TcpConnection::sendInLoop(const std::string& msg) {
     bool flag = true;
     int left_bytes = msg.size();
 
-    ssize_t n = ::write(m_socket.fd(), msg.data(), 1); // FIXME: 测试，改为msg.size()
+    ssize_t n = ::write(m_socket.fd(), msg.data(), msg.size()); // FIXME: 测试，改为msg.size()
     if (n >= 0) {
         left_bytes -= n;
         if (static_cast<size_t>(n) == msg.size()) {
@@ -58,7 +59,13 @@ void TcpConnection::sendInLoop(const std::string& msg) {
     // 没写完，注册写事件
     if (flag && left_bytes > 0) {
         m_output_buffer.append(msg.data() + n, left_bytes);
-        Coroutine::sptr co = std::make_shared<Coroutine>(kDefaultStackSize, std::bind(&TcpConnection::handleWrite, this));
+
+        Coroutine::sptr co;
+        if (m_mode == kLT) {
+            co = std::make_shared<Coroutine>(kDefaultStackSize, std::bind(&TcpConnection::handleWriteLT, this));
+        } else {
+            co = std::make_shared<Coroutine>(kDefaultStackSize, std::bind(&TcpConnection::handleWriteET, this));
+        }
         m_channel.enableWrite(co);
     }
 }
@@ -74,12 +81,46 @@ void TcpConnection::connectEstablished() {
         m_connection_cb(this);
     }
 
-    Coroutine::sptr co = std::make_shared<Coroutine>(kDefaultStackSize, std::bind(&TcpConnection::handleRead, this));
+    Coroutine::sptr co;
+    if (m_mode == kLT) {
+        co = std::make_shared<Coroutine>(kDefaultStackSize, std::bind(&TcpConnection::handleReadLT, this));
+    } else {
+        co = std::make_shared<Coroutine>(kDefaultStackSize, std::bind(&TcpConnection::handleReadET, this));
+    }
     m_channel.enableRead(co);
 }
 
-// TODO: LT模式和ET模式
-void TcpConnection::handleRead() {
+void TcpConnection::handleReadLT() {
+    m_loop->assertInLoopThread();
+    while (true) {
+        int save_errno = 0;
+        ssize_t n = m_input_buffer.readSocket(m_socket, &save_errno);
+        m_last_read_time = Timestamp::now();
+        if (n > 0) {
+            m_message_cb(this, &m_input_buffer);
+        } else if (n == 0) {
+            handleClose();
+            return;
+        } else {
+            errno = save_errno;
+            if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                // COMMENT: LT模式下，不用处理
+            } else if (errno == EPIPE || errno == ECONNRESET) {
+                LOG_ERROR("TcpConnection::handleReadLT(): %s.", strerror(errno));
+                handleClose();
+                return;
+            } else {
+                LOG_ERROR("TcpConnection::handleReadLT(): %s.", strerror(errno));
+                handleError();
+            }
+        }  
+
+        // COMMENT: LT模式下，只读一次
+        Coroutine::yield();
+    } 
+}
+
+void TcpConnection::handleReadET() {
     m_loop->assertInLoopThread();
     
     while (true) {
@@ -93,51 +134,112 @@ void TcpConnection::handleRead() {
             return;
         } else {
             errno = save_errno;
-            LOG_ERROR("TcpConnection::handleRead(): %s.", strerror(save_errno));
-            handleError();
+            if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                // COMMENT: ET模式下，需要将数据全部读完，没有数据可读，就退出当前协程，等待下次读事件触发
+                Coroutine::yield();
+            } else if (errno == EPIPE || errno == ECONNRESET) {
+                LOG_ERROR("TcpConnection::handleReadET(): %s.", strerror(errno));
+                handleClose();
+                return;
+            } else {
+                LOG_ERROR("TcpConnection::handleReadET(): %s.", strerror(errno));
+                handleError();
+            }
         }  
-
-        // COMMENT: 只读一次，然后加入协程队列，下次再读，防止饿死其他conn
-        m_loop->queueInLoop(Coroutine::getCurrentCoroutine());
-        Coroutine::yield();
     }
 }
 
 // TODO: LT模式和ET模式
-void TcpConnection::handleWrite() {
+void TcpConnection::handleWriteLT() {
     m_loop->assertInLoopThread();
 
-    // 有数据发送
-    if (m_output_buffer.readableBytes() > 0) {
-        size_t n = m_socket.write(m_output_buffer.peek(), m_output_buffer.readableBytes());
-        if (n > 0) {
-            m_output_buffer.retrieve(n);
-            if (m_output_buffer.readableBytes() == 0) {
-                LOG_DEBUG("TcpConnection::sendInLoop(): send all data.");
-                m_channel.disableWrite();
-                if (m_state == kDisconnecting) { // COMMENT: 之前想关闭时，还要写数据。现在写完了, 就关闭
-                    shutdownInLoop();
+    while (true) {
+        if (m_output_buffer.readableBytes() > 0) {
+            size_t n = m_socket.write(m_output_buffer.peek(), m_output_buffer.readableBytes());
+            if (n > 0) {
+                m_output_buffer.retrieve(n);
+                if (m_output_buffer.readableBytes() == 0) {
+                    LOG_DEBUG("TcpConnection::sendInLoop(): send all data.");
+                    m_channel.disableWrite();
+                    if (m_state == kDisconnecting) { // COMMENT: 之前想关闭时，还要写数据。现在写完了, 就关闭
+                        shutdownInLoop();
+                        return;
+                    }
+                    return;
+                }
+            } else if (n == 0) {
+                // COMMENT: LT模式下，不需要重新注册写事件，下次可写了会继续触发写事件
+                LOG_DEBUG("TcpConnection::handleWrite(): send 0 bytes.");
+            } else {
+                if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                    // COMMENT: 在 LT 模式下，不需要重新注册写事件
+                } else if (errno == EPIPE || errno == ECONNRESET) {
+                    LOG_ERROR("TcpConnection::handleWrite(): %s.", m_channel.fd(), strerror(errno));
+                    handleClose();
+                    return;
+                } else {
+                    LOG_ERROR("TcpConnection::handleWrite(): %s.", m_channel.fd(), strerror(errno));
+                    handleError();
                 }
             }
-        } else if (n == 0) {
-            LOG_DEBUG("TcpConnection::handleWrite(): send 0 bytes.");
-            // COMMENT: LT模式下，不需要重新注册写事件，下次可写了会继续触发写事件
         } else {
-            if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                // COMMENT: 在 LT 模式下，不需要重新注册写事件
-            } else if (errno == EPIPE || errno == ECONNRESET) {
-                LOG_ERROR("TcpConnection::handleWrite(): fd=%d - error: %s.", m_channel.fd(), strerror(errno));
-                handleClose();
-            } else {
-                LOG_ERROR("TcpConnection::handleWrite(): fd=%d - error: %s.", m_channel.fd(), strerror(errno));
+            m_channel.disableWrite();
+            if (m_state == kDisconnecting) {
+                shutdownInLoop();
             }
+            return;
         }
-    } else {
-        m_channel.disableWrite();
-        if (m_state == kDisconnecting) {
-            shutdownInLoop();
+
+        Coroutine::yield();
+    }
+}
+
+void TcpConnection::handleWriteET() {
+    m_loop->assertInLoopThread();
+
+    while (true) {
+        if (m_output_buffer.readableBytes() > 0) {
+            size_t n = m_socket.write(m_output_buffer.peek(), m_output_buffer.readableBytes());
+            if (n > 0) {
+                m_output_buffer.retrieve(n);
+                if (m_output_buffer.readableBytes() == 0) {
+                    LOG_DEBUG("TcpConnection::sendInLoop(): send all data.");
+                    m_channel.disableWrite();
+                    if (m_state == kDisconnecting) { // COMMENT: 之前想关闭时，还要写数据。现在写完了, 就关闭
+                        shutdownInLoop();
+                    }
+                    return;
+                }
+            } else if (n == 0) {
+                // COMMENT: ET模式下，需要重新注册写事件
+                LOG_DEBUG("TcpConnection::handleWrite(): send 0 bytes.");
+                if (m_output_buffer.readableBytes() > 0) {
+                    m_channel.enableWrite(Coroutine::getCurrentCoroutine());
+                }
+                Coroutine::yield();
+            } else {
+                if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                    // COMMENT: 在 ET 模式下，需要重新注册写事件
+                    if (m_output_buffer.readableBytes() > 0) {
+                        m_channel.enableWrite(Coroutine::getCurrentCoroutine());
+                    }
+                    Coroutine::yield();
+                } else if (errno == EPIPE || errno == ECONNRESET) {
+                    LOG_ERROR("TcpConnection::handleWrite(): %s.", m_channel.fd(), strerror(errno));
+                    handleClose();
+                    return;
+                } else {
+                    LOG_ERROR("TcpConnection::handleWrite(): %s.", m_channel.fd(), strerror(errno));
+                    handleError();
+                }
+            }
+        } else {
+            m_channel.disableWrite();
+            if (m_state == kDisconnecting) {
+                shutdownInLoop();
+            }
+            return;
         }
-        return;
     }
 }
 
