@@ -13,7 +13,6 @@ namespace net {
 
 using ReadCallback = std::function<void()>;
 using WriteCallback = std::function<void()>;
-using CloseCallback = std::function<void()>;
 
 enum {
     kNoneEvent = 0,
@@ -50,24 +49,27 @@ public:
     void setReadCoroutine(const Coroutine::sptr& co) { m_read_co = co; }
     void setWriteCoroutine(const Coroutine::sptr& co) { m_write_co = co; }
 
-    void setReadCallback(ReadCallback cb) { m_read_cb = cb; }
+    void setReadCallback(const ReadCallback& cb) { m_read_cb = cb; }
+    void setWriteCallback(const WriteCallback& cb) { m_write_cb = cb; }
 
     bool isWriting() const { return m_events & kWriteEvent; }
+    bool isReading() const { return m_events & kReadEvent; }
 
 private:
     void update();
 
 private:
-    EventLoop* m_loop;
+    EventLoop* m_loop{nullptr};
     int m_fd{-1};
     int m_revents{0};
     int m_events{0};
     int m_index{-1};
     
-    // COMMENT: 如果注册的函数中存在IO操作，注册协程；否则可以注册回调函数
+    // COMMENT: 如果注册的函数中存在IO操作，需要注册协程；否则可以注册回调函数
     Coroutine::sptr m_read_co;
     Coroutine::sptr m_write_co;
     ReadCallback m_read_cb;
+    WriteCallback m_write_cb;
 };
 
 class ChannelManager {

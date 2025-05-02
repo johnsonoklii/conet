@@ -17,7 +17,7 @@ TcpConnection::TcpConnection(EventLoop* loop, int fd, const InetAddress& local_a
 }
 
 TcpConnection::~TcpConnection() {
-    LOG_DEBUG("TcpConnection::~TcpConnection() fd: %d", m_socket.fd());
+    LOG_DEBUG("TcpConnection::~TcpConnection(): fd=%d.", m_socket.fd());
     ChannelManager::getInstance().removeChannel(&m_channel);
 }
 
@@ -30,7 +30,7 @@ void TcpConnection::sendInLoop(const std::string& msg) {
     m_loop->assertInLoopThread();
 
     if (!connected()) {
-        LOG_ERROR("TcpConnection::sendInLoop() - Disconnected, give up sending");
+        LOG_ERROR("TcpConnection::sendInLoop(): disconnected, give up send.");
         return;
     }
 
@@ -42,14 +42,15 @@ void TcpConnection::sendInLoop(const std::string& msg) {
     bool flag = true;
     int left_bytes = msg.size();
 
-    ssize_t n = ::write(m_socket.fd(), msg.data(), msg.size()); // FIXME: 测试，改为msg.size()
+    ssize_t n = ::write(m_socket.fd(), msg.data(), 1); // FIXME: 测试，改为msg.size()
     if (n >= 0) {
         left_bytes -= n;
         if (static_cast<size_t>(n) == msg.size()) {
-            LOG_DEBUG("TcpConnection::sendInLoop() - send all data");
+            LOG_DEBUG("TcpConnection::sendInLoop(): send all data.");
             return;
         }
     } else {
+        LOG_ERROR("TcpConnection::sendInLoop(): %s.", strerror(errno));
         handleError();
         flag = false;
     }
@@ -72,7 +73,9 @@ void TcpConnection::connectEstablished() {
     if (m_connection_cb) {
         m_connection_cb(this);
     }
-    handleRead();
+
+    Coroutine::sptr co = std::make_shared<Coroutine>(kDefaultStackSize, std::bind(&TcpConnection::handleRead, this));
+    m_channel.enableRead(co);
 }
 
 // TODO: LT模式和ET模式
@@ -90,6 +93,7 @@ void TcpConnection::handleRead() {
             return;
         } else {
             errno = save_errno;
+            LOG_ERROR("TcpConnection::handleRead(): %s.", strerror(save_errno));
             handleError();
         }  
 
@@ -109,22 +113,23 @@ void TcpConnection::handleWrite() {
         if (n > 0) {
             m_output_buffer.retrieve(n);
             if (m_output_buffer.readableBytes() == 0) {
+                LOG_DEBUG("TcpConnection::sendInLoop(): send all data.");
                 m_channel.disableWrite();
                 if (m_state == kDisconnecting) { // COMMENT: 之前想关闭时，还要写数据。现在写完了, 就关闭
                     shutdownInLoop();
                 }
             }
         } else if (n == 0) {
-            LOG_DEBUG("TcpConnection::handleWrite() - send 0 bytes");
+            LOG_DEBUG("TcpConnection::handleWrite(): send 0 bytes.");
             // COMMENT: LT模式下，不需要重新注册写事件，下次可写了会继续触发写事件
         } else {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
                 // COMMENT: 在 LT 模式下，不需要重新注册写事件
             } else if (errno == EPIPE || errno == ECONNRESET) {
-                LOG_ERROR("TcpConnection fd=%d write error: %s", m_channel.fd(), strerror(errno));
+                LOG_ERROR("TcpConnection::handleWrite(): fd=%d - error: %s.", m_channel.fd(), strerror(errno));
                 handleClose();
             } else {
-                LOG_ERROR("TcpConnection fd=%d write error: %s", m_channel.fd(), strerror(errno));
+                LOG_ERROR("TcpConnection::handleWrite(): fd=%d - error: %s.", m_channel.fd(), strerror(errno));
             }
         }
     } else {

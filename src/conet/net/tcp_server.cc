@@ -21,7 +21,6 @@ TcpServer::TcpServer(const std::string& ip, uint16_t port, const std::string& na
 , m_name(name) {
     InetAddress listen_addr(ip, port);
     m_acceptor = std::unique_ptr<Acceptor>(new Acceptor(m_main_loop.get(), listen_addr, true)); // FIXME: 服务器的配置
-
 }
 
 TcpServer::~TcpServer() {}

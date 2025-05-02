@@ -5,6 +5,7 @@
 #include "conet/net/acceptor.h"
 #include "conet/net/tcp_connection.h"
 #include "conet/net/eventloop_threadpool.h"
+#include "conet/base/coroutine/hook.h"
 
 namespace conet {
 namespace net {

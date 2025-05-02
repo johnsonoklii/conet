@@ -10,7 +10,8 @@ typedef ssize_t (*write_fun_ptr_t)(int sockfd, const char* buf, size_t len);
 
 namespace conet {
 
-void setHook();
+void setHook(bool on);
+
 int accept_hook(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
 ssize_t readv_hook(int sockfd, const struct iovec *iovec, int count);
 ssize_t write_hook(int sockfd, const char* buf, size_t len);
