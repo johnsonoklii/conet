@@ -23,6 +23,7 @@ while [[ $# -gt 0 ]]; do
             rm -f /usr/local/lib/libconet.so
             rm -f /usr/local/lib/libconet.a
             rm -rf build
+            rm -rf ./src/include
             echo "uninstall success!"
             exit 0
             ;;
@@ -33,18 +34,13 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# 复制头文件
-LOG_SRC_FILES=(
-    "./src/conet/base/log/logger.h"
-    "./src/conet/base/log/appender.h"
-    "./src/conet/base/log/formatter.h"
-)
-LOG_TARGET_DIR="./src/include/conet/base/log"
-
-mkdir -p "$LOG_TARGET_DIR"
-for file in "${LOG_SRC_FILES[@]}"; do
-    cp "$file" "$LOG_TARGET_DIR"
-done
+HEADER_TARGET_DIR="./src/include/conet/"
+mkdir -p "$HEADER_TARGET_DIR"
+rsync -avm \
+    --include='*/' \
+    --include='*.h' \
+    --exclude='*' \
+    "./src/conet/" "$HEADER_TARGET_DIR"
 
 # 构建
 mkdir -p build
