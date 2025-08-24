@@ -19,6 +19,8 @@ public:
     EventLoop();
     ~EventLoop();
 
+    static EventLoop* getCurrentEventLoop();
+
     void loop();
     void stop();
     void updateChannel(Channel* channel);

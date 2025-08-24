@@ -55,7 +55,7 @@ int Socket::accept(InetAddress* peer_addr) {
     sockaddr_in cli_addr;
     memset(&cli_addr, 0, sizeof(cli_addr));
     socklen_t len = sizeof(cli_addr);
-    int ret = accept_hook(m_fd, (sockaddr*)&cli_addr, &len);
+    int ret = conet::accept(m_fd, (sockaddr*)&cli_addr, &len);
     if (ret > 0) {
         peer_addr->setSockAddr(cli_addr);
     }
@@ -63,11 +63,11 @@ int Socket::accept(InetAddress* peer_addr) {
 }
 
 size_t Socket::readv(const struct iovec *iovec, int count) const {
-    return readv_hook(m_fd, iovec, count);
+    return conet::readv(m_fd, iovec, count);
 }
 
 size_t Socket::write(const char* buf, size_t len) const {
-    return write_hook(m_fd, buf, len);
+    return conet::write(m_fd, buf, len);
 }
 
 void Socket::close() {

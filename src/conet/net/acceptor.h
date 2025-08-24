@@ -14,6 +14,8 @@ class Acceptor {
 public:
     using uptr = std::unique_ptr<Acceptor>;
     Acceptor(EventLoop* loop, const InetAddress& listen_addr, bool reuse_port);
+    ~Acceptor();
+
 
     int accept(InetAddress* peer_addr);
     InetAddress getListenAddr() const { return m_listen_addr; }

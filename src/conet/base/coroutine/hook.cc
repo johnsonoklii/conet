@@ -14,6 +14,8 @@ using namespace conet::net;
 HOOK_SYS_FUNC(accept);
 HOOK_SYS_FUNC(readv);
 HOOK_SYS_FUNC(write);
+HOOK_SYS_FUNC(sleep);
+HOOK_SYS_FUNC(usleep);
 
 namespace conet {
 
@@ -51,10 +53,10 @@ void setWrite(int sockfd)  {
 
 int accept_hook(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
     LOG_DEBUG("accept_hook(): this is accept hook.")
-    if (Coroutine::isMainCoroutine()) {
-        LOG_DEBUG("accept_hook(): in main coroutine.")
-        return g_sys_accept_fun(sockfd, addr, addrlen);
-    }
+    // if (Coroutine::isMainCoroutine()) {
+    //     LOG_DEBUG("accept_hook(): in main coroutine.")
+    //     return g_sys_accept_fun(sockfd, addr, addrlen);
+    // }
 
     int ret = g_sys_accept_fun(sockfd, addr, addrlen);
     if (ret > 0) {
@@ -71,10 +73,10 @@ int accept_hook(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
 
 ssize_t readv_hook(int sockfd, const struct iovec *iovec, int count) {
     LOG_DEBUG("readv_hook(): this is reav hook.")
-    if (Coroutine::isMainCoroutine()) {
-        LOG_DEBUG("readv_hook(): in main coroutine.")
-        return g_sys_readv_fun(sockfd, iovec, count);
-    }
+    // if (Coroutine::isMainCoroutine()) {
+    //     LOG_DEBUG("readv_hook(): in main coroutine.")
+    //     return g_sys_readv_fun(sockfd, iovec, count);
+    // }
 
     int ret = g_sys_readv_fun(sockfd, iovec, count);
     if (ret > 0) {
@@ -90,11 +92,11 @@ ssize_t readv_hook(int sockfd, const struct iovec *iovec, int count) {
 }
 
 ssize_t write_hook(int sockfd, const char* buf, size_t len) {
-    LOG_DEBUG("write_hook(): this is write hook.")
-    if (Coroutine::isMainCoroutine()) {
-        LOG_DEBUG("write_hook(): in main coroutine.")
-        return g_sys_write_fun(sockfd, buf, len);
-    }
+    // LOG_DEBUG("write_hook(): this is write hook.")
+    // if (Coroutine::isMainCoroutine()) {
+    //     LOG_DEBUG("write_hook(): in main coroutine.")
+    //     return g_sys_write_fun(sockfd, buf, len);
+    // }
 
     int ret = g_sys_write_fun(sockfd, buf, len);
     if (ret > 0) {
@@ -109,12 +111,52 @@ ssize_t write_hook(int sockfd, const char* buf, size_t len) {
     return g_sys_write_fun(sockfd, buf, len);
 }
 
+unsigned int sleep_hook(unsigned int seconds) {
+    LOG_DEBUG("sleep_hook(): this is sleep hook.")
+
+    EventLoop* loop = EventLoop::getCurrentEventLoop();
+    if (loop == nullptr) {
+        return g_sys_sleep_fun(seconds);
+    }
+
+    Coroutine::sptr co = Coroutine::getCurrentCoroutine();
+    loop->runAfter(seconds * 1000, [loop, co]() {
+        loop->runCoroutine(co);
+    });
+
+    LOG_DEBUG("sleep_hook(): yield.");
+    Coroutine::yield();
+    
+
+    return seconds;
+}
+
+int usleep_hook(unsigned int useconds) {
+    LOG_DEBUG("usleep_hook(): this is usleep hook.")
+
+    EventLoop* loop = EventLoop::getCurrentEventLoop();
+    if (loop == nullptr) {
+        return g_sys_usleep_fun(useconds);
+    }
+
+    Coroutine::sptr co = Coroutine::getCurrentCoroutine();
+    loop->runAfter(useconds / 1000, [loop, co]() {
+        loop->runCoroutine(co);
+    });
+
+    LOG_DEBUG("usleep_hook(): yield.");
+    Coroutine::yield();
+    
+
+    return 0;
+}
+
 extern "C" {
 int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
     if (!conet::g_hook) {
         return g_sys_accept_fun(sockfd, addr, addrlen);
     } else {
-        return conet::accept_hook(sockfd, addr, addrlen);
+        return accept_hook(sockfd, addr, addrlen);
     }
 }
 
@@ -122,7 +164,7 @@ ssize_t readv(int sockfd, const struct iovec *iovec, int count) {
     if (!conet::g_hook) {
         return g_sys_readv_fun(sockfd, iovec, count);
     } else {
-        return conet::readv_hook(sockfd, iovec, count);
+        return readv_hook(sockfd, iovec, count);
     }
 }
 
@@ -130,10 +172,27 @@ ssize_t write(int sockfd, const char* buf, size_t len) {
     if (!conet::g_hook) {
         return g_sys_write_fun(sockfd, buf, len);
     } else {
-        return conet::write_hook(sockfd, buf, len);
+        return write_hook(sockfd, buf, len);
     }
 
 }
+
+unsigned int sleep(unsigned int seconds) {
+    if (!conet::g_hook) {
+        return g_sys_sleep_fun(seconds);
+    } else {
+        return sleep_hook(seconds);
+    }
+}
+
+int usleep (unsigned int useconds) {
+    if (!conet::g_hook) {
+        return g_sys_usleep_fun(useconds);
+    } else {
+        return usleep_hook(useconds);
+    }
+}
+
 } // extern "C"
 
 } // namespace conet

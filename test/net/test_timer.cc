@@ -2,6 +2,7 @@
 #include "conet/base/coroutine/coroutine.h"
 #include "conet/base/log/logger.h"
 #include "conet/base/util/timestamp.h"
+#include "conet/base/coroutine/hook.h"
 
 #include <iostream>
 
@@ -59,6 +60,22 @@ void test3() {
     loop.loop();
 }
 
+
+void test_sleep() {
+    conet::setHook(true);
+
+    LOG_INFO("test_sleep(): start.");
+
+    conet::net::EventLoop loop;
+
+    loop.runAfter(1000, []() {
+        conet::sleep(3);
+        LOG_INFO("runAfter: 1s.");
+    });
+
+    loop.loop();
+}
+
 int main() {
-    test3();
+    test_sleep();
 }

@@ -25,6 +25,15 @@ Acceptor::Acceptor(EventLoop* loop, const InetAddress& listen_addr, bool reuse_p
     ChannelManager::getInstance().addChannel(&m_accept_channel);
 }
 
+Acceptor::~Acceptor() {
+    ChannelManager::getInstance().removeChannel(&m_accept_channel);
+    m_accept_channel.disableAll();
+    m_accept_socket.close();
+    if (m_idle_fd >= 0) {
+        ::close(m_idle_fd);
+    }
+}
+
 int Acceptor::accept(InetAddress* peer_addr) {
     m_loop->assertInLoopThread();
     

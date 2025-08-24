@@ -9,6 +9,8 @@
 namespace conet {
 namespace net {
 
+static thread_local EventLoop* t_cur_eventloop = nullptr;
+
 static constexpr int kPollTimeMs = 1000 * 60; // 1min
 
 static thread_local EventLoop* t_event_loop = nullptr;
@@ -45,11 +47,17 @@ EventLoop::EventLoop() {
     t_event_loop = this;
     m_timer_set.reset(new TimerSet(this));
     Coroutine::getMainCoroutine();
+
+    t_cur_eventloop = this;
 }
 
 EventLoop::~EventLoop() {
     m_looping.store(false);
     delete m_poller;
+}
+
+EventLoop* EventLoop::getCurrentEventLoop() {
+    return t_cur_eventloop;
 }
 
 void EventLoop::stop() {
@@ -68,10 +76,11 @@ void EventLoop::removeChannel(Channel* channel) {
 
 void EventLoop::runCoroutine(const Coroutine::sptr& co) {
     if (isInLoopThread() && Coroutine::isMainCoroutine()) {
-        // LOG_DEBUG("EventLoop::runCoroutineInLoop(): running in main coroutine");
+        LOG_DEBUG("EventLoop::runCoroutineInLoop(): running in main coroutine");
         Coroutine::resume(co);
         // LOG_DEBUG("EventLoop::runCoroutineInLoop(): end..");
     } else {
+    //     LOG_INFO("EventLoop::runCoroutineInLoop(): queue in loop");
         queueInLoop(co);
     }
 }
@@ -81,10 +90,11 @@ void EventLoop::queueInLoop(const Coroutine::sptr& co) {
         std::lock_guard<std::mutex> lock(m_mutex);
         m_co_list.push_back(co);
     }
-    
-    if (!isInLoopThread() || m_calling_co.load()) {
-        wakeup();
-    }
+   
+    wakeup();
+    // if (!isInLoopThread() || m_calling_co.load()) {
+    //     wakeup();
+    // }
 }
 
 void EventLoop::wakeup() {

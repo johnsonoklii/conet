@@ -136,6 +136,7 @@ void TimerSet::handleRead() {
     std::vector<Timer::sptr> expired_timers = getExpiredTimers();
 
     for (auto& timer : expired_timers) {
+        LOG_DEBUG("TimerSet::handleRead(): run timer");
         // COMMENT: 需要加入loop的协程队列，防止timer中存在阻塞，饿死其他timer
         Coroutine::sptr co = std::make_shared<Coroutine>(kDefaultStackSize, std::bind(&TimerSet::runTimer, this, timer));
         m_loop->runCoroutine(co);
